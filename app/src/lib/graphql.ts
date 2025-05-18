@@ -26,6 +26,10 @@ interface TrackRepositoryResponse {
   trackRepository: Repository;
 }
 
+interface UntrackRepositoryResponse {
+  untrackRepository: boolean;
+}
+
 interface TrackedRepositoriesResponse {
   trackedRepositories: Repository[];
 }
@@ -81,6 +85,20 @@ export const trackRepository = async (name: string, owner: string) => {
     { name, owner },
   );
   return response.trackRepository;
+};
+
+// Mutation to untrack a repository
+export const untrackRepository = async (name: string, owner: string) => {
+  const mutation = `
+    mutation UntrackRepository($name: String!, $owner: String!) {
+      untrackRepository(name: $name, owner: $owner)
+    }
+  `;
+  const response = await graphqlClient.request<UntrackRepositoryResponse>(
+    mutation,
+    { name, owner },
+  );
+  return response.untrackRepository;
 };
 
 export const getTrackedRepositories = async () => {

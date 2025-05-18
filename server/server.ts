@@ -59,20 +59,19 @@ const yoga = createYoga({
 
       type Mutation {
         trackRepository(name: String!, owner: String!): Repository!
+        untrackRepository(name: String!, owner: String!): Boolean!
       }
     `,
     resolvers: {
       Query: {
         hello: () => "Hello from Yoga!",
         searchRepositories: async (_, { query, limit }) => {
-          console.log("query", query);
           const response = await octokit.rest.search.repos({
             q: `${query} in:name`,
             per_page: limit,
             sort: "stars",
             order: "desc",
           });
-          console.log("res", response.data.items?.[0]);
 
           return response.data.items.map((repo: GitHubRepository) => ({
             name: repo.name,
@@ -97,6 +96,18 @@ const yoga = createYoga({
           const repo = await fetchRepositoryInfo(name, owner);
           trackedRepositories.push({ name, owner });
           return repo;
+        },
+        untrackRepository: async (_, { name, owner }) => {
+          const index = trackedRepositories.findIndex(
+            (repo) => repo.name === name && repo.owner === owner
+          );
+
+          if (index === -1) {
+            throw new Error("Repository not found in tracked list");
+          }
+
+          trackedRepositories.splice(index, 1);
+          return true;
         },
       },
     },

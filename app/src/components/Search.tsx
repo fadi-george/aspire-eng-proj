@@ -29,10 +29,6 @@ export const Search = () => {
     queryFn: () => searchRepositories(debouncedSearch, 5),
     enabled: !!debouncedSearch,
   });
-  console.log({
-    repositories,
-    isLoadingRepos,
-  });
 
   const { mutate: trackRepo } = useMutation({
     mutationFn: ({ name, owner }: { name: string; owner: string }) =>
