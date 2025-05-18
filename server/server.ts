@@ -4,19 +4,19 @@ import { Octokit } from "octokit";
 const octokit = new Octokit();
 
 const trackedRepositories: {
-  name: string;
-  owner: string;
+  url: string;
 }[] = [];
 
-async function fetchRepositoryInfo(name: string, owner: string) {
+async function fetchRepositoryInfo(url: string) {
   try {
+    const [repo, owner] = url.split("/").reverse();
     const response = await octokit.rest.repos.get({
       owner,
-      repo: name,
+      repo,
     });
 
     return {
-      name,
+      name: response.data.name,
       owner,
       url: response.data.html_url,
       stars: response.data.stargazers_count,
@@ -58,8 +58,8 @@ const yoga = createYoga({
       }
 
       type Mutation {
-        trackRepository(name: String!, owner: String!): Repository!
-        untrackRepository(name: String!, owner: String!): Boolean!
+        trackRepository(url: String!): Repository!
+        untrackRepository(url: String!): Boolean!
       }
     `,
     resolvers: {
@@ -84,22 +84,20 @@ const yoga = createYoga({
         },
         trackedRepositories: async () => {
           const repos = await Promise.all(
-            trackedRepositories.map((repo) =>
-              fetchRepositoryInfo(repo.name, repo.owner)
-            )
+            trackedRepositories.map((repo) => fetchRepositoryInfo(repo.url))
           );
           return repos;
         },
       },
       Mutation: {
-        trackRepository: async (_, { name, owner }) => {
-          const repo = await fetchRepositoryInfo(name, owner);
-          trackedRepositories.push({ name, owner });
+        trackRepository: async (_, { url }) => {
+          const repo = await fetchRepositoryInfo(url);
+          trackedRepositories.push({ url });
           return repo;
         },
-        untrackRepository: async (_, { name, owner }) => {
+        untrackRepository: async (_, { url }) => {
           const index = trackedRepositories.findIndex(
-            (repo) => repo.name === name && repo.owner === owner
+            (repo) => repo.url === url
           );
 
           if (index === -1) {

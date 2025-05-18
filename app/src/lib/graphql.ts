@@ -67,10 +67,10 @@ export const searchRepositories = async (query: string, limit: number = 10) => {
 };
 
 // Mutation to track a repository
-export const trackRepository = async (name: string, owner: string) => {
+export const trackRepository = async (url: string) => {
   const mutation = `
-    mutation TrackRepository($name: String!, $owner: String!) {
-      trackRepository(name: $name, owner: $owner) {
+    mutation TrackRepository($url: String!) {
+      trackRepository(url: $url) {
         name
         description
         url
@@ -82,21 +82,21 @@ export const trackRepository = async (name: string, owner: string) => {
   `;
   const response = await graphqlClient.request<TrackRepositoryResponse>(
     mutation,
-    { name, owner },
+    { url },
   );
   return response.trackRepository;
 };
 
 // Mutation to untrack a repository
-export const untrackRepository = async (name: string, owner: string) => {
+export const untrackRepository = async (url: string) => {
   const mutation = `
-    mutation UntrackRepository($name: String!, $owner: String!) {
-      untrackRepository(name: $name, owner: $owner)
+    mutation UntrackRepository($url: String!) {
+      untrackRepository(url: $url)
     }
   `;
   const response = await graphqlClient.request<UntrackRepositoryResponse>(
     mutation,
-    { name, owner },
+    { url },
   );
   return response.untrackRepository;
 };

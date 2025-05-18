@@ -32,8 +32,7 @@ export const Search = () => {
   });
 
   const { mutate: trackRepo } = useMutation({
-    mutationFn: ({ name, owner }: { name: string; owner: string }) =>
-      trackRepository(name, owner),
+    mutationFn: ({ url }: { url: string }) => trackRepository(url),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trackedRepositories"] });
       toast.success("Repository tracked successfully!");
@@ -44,11 +43,7 @@ export const Search = () => {
   });
 
   const handleTrackRepository = (repository: Repository) => {
-    console.log("tracking repository", repository, {
-      name: repository.name,
-      owner: repository.owner,
-    });
-    trackRepo({ name: repository.name, owner: repository.owner });
+    trackRepo({ url: repository.url });
     setSearch("");
   };
 

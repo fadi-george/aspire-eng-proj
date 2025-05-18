@@ -20,8 +20,7 @@ export const RepositoryList = () => {
   });
 
   const { mutate: untrackRepo } = useMutation({
-    mutationFn: ({ name, owner }: { name: string; owner: string }) =>
-      untrackRepository(name, owner),
+    mutationFn: ({ url }: { url: string }) => untrackRepository(url),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trackedRepositories"] });
       setDeleteRepoInfo(null);
@@ -31,11 +30,11 @@ export const RepositoryList = () => {
 
   const [deleteRepoInfo, setDeleteRepoInfo] = useState<{
     name: string;
-    owner: string;
+    url: string;
   } | null>(null);
 
-  const handleDeleteRepo = (name: string, owner: string) => {
-    untrackRepo({ name, owner });
+  const handleDeleteRepo = (url: string) => {
+    untrackRepo({ url });
   };
 
   return (
@@ -59,7 +58,7 @@ export const RepositoryList = () => {
                       onClick={() =>
                         setDeleteRepoInfo({
                           name: repository.name,
-                          owner: repository.owner,
+                          url: repository.url,
                         })
                       }
                     >
@@ -79,7 +78,7 @@ export const RepositoryList = () => {
         description={`Do you want to remove ${deleteRepoInfo?.name} from your tracked repositories?`}
         onConfirm={() => {
           if (deleteRepoInfo) {
-            handleDeleteRepo(deleteRepoInfo.name, deleteRepoInfo.owner);
+            handleDeleteRepo(deleteRepoInfo.url);
           }
         }}
         onCancel={() => {
