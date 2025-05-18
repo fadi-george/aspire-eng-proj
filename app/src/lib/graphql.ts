@@ -10,6 +10,7 @@ export interface Repository {
   url: string;
   stars: number;
   language: string | null;
+  owner: string;
 }
 
 // Define response types
@@ -19,6 +20,14 @@ interface HelloResponse {
 
 interface SearchRepositoriesResponse {
   searchRepositories: Repository[];
+}
+
+interface TrackRepositoryResponse {
+  trackRepository: Repository;
+}
+
+interface TrackedRepositoriesResponse {
+  trackedRepositories: Repository[];
 }
 
 // Example query to get the hello message
@@ -42,6 +51,7 @@ export const searchRepositories = async (query: string, limit: number = 10) => {
         url
         stars
         language
+        owner
       }
     }
   `;
@@ -50,4 +60,43 @@ export const searchRepositories = async (query: string, limit: number = 10) => {
     { query, limit },
   );
   return response.searchRepositories;
+};
+
+// Mutation to track a repository
+export const trackRepository = async (name: string, owner: string) => {
+  const mutation = `
+    mutation TrackRepository($name: String!, $owner: String!) {
+      trackRepository(name: $name, owner: $owner) {
+        name
+        description
+        url
+        stars
+        language
+        owner
+      }
+    }
+  `;
+  const response = await graphqlClient.request<TrackRepositoryResponse>(
+    mutation,
+    { name, owner },
+  );
+  return response.trackRepository;
+};
+
+export const getTrackedRepositories = async () => {
+  const query = `
+    query {
+      trackedRepositories {
+        name
+        description
+        url
+        stars
+        language
+        owner
+      }
+    }
+  `;
+  const response =
+    await graphqlClient.request<TrackedRepositoriesResponse>(query);
+  return response.trackedRepositories;
 };
