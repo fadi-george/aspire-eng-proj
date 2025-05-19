@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Package, RefreshCcw, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export const RepositoryList = () => {
@@ -34,11 +34,7 @@ export const RepositoryList = () => {
     queryFn: getTrackedRepositories,
   });
 
-  useEffect(() => {
-    toast.success("Repository marked as seen!");
-  }, []);
-
-  const { mutate: untrackRepo } = useMutation({
+  const { mutate: untrackRepo, isPending: isRemovingRepo } = useMutation({
     mutationFn: ({ name, owner }: { name: string; owner: string }) =>
       untrackRepository(name, owner),
     onSuccess: () => {
@@ -48,7 +44,7 @@ export const RepositoryList = () => {
     },
   });
 
-  const { mutate: markAsSeen } = useMutation({
+  const { mutateAsync: markAsSeen } = useMutation({
     mutationFn: ({ name, owner }: { name: string; owner: string }) =>
       markRepositoryAsSeen(name, owner),
     onSuccess: () => {
@@ -60,14 +56,6 @@ export const RepositoryList = () => {
     name: string;
     owner: string;
   } | null>(null);
-
-  const handleDeleteRepo = (name: string, owner: string) => {
-    untrackRepo({ name, owner });
-  };
-
-  const handleMarkAsSeen = (name: string, owner: string) => {
-    markAsSeen({ name, owner });
-  };
 
   return (
     <div className="flex flex-1 pt-10">
@@ -103,18 +91,19 @@ export const RepositoryList = () => {
           ) : (
             <>
               {repositories?.map((repository) => {
+                const { name, owner } = repository;
                 return (
                   <RepositoryCard
-                    key={repository.name}
+                    key={name}
                     repository={repository}
                     onRemove={() =>
                       setDeleteRepoInfo({
-                        name: repository.name,
-                        owner: repository.owner,
+                        name: name,
+                        owner: owner,
                       })
                     }
                     onMarkAsSeen={() => {
-                      handleMarkAsSeen(repository.name, repository.owner);
+                      return markAsSeen({ name, owner });
                     }}
                   />
                 );
@@ -125,11 +114,12 @@ export const RepositoryList = () => {
       </div>
       <ConfirmDialog
         open={!!deleteRepoInfo}
+        isFetching={isRemovingRepo}
         title="Are you sure?"
         description={`Do you want to remove ${deleteRepoInfo?.name} from your tracked repositories?`}
         onConfirm={() => {
           if (deleteRepoInfo) {
-            handleDeleteRepo(deleteRepoInfo.name, deleteRepoInfo.owner);
+            untrackRepo(deleteRepoInfo);
           }
         }}
         onCancel={() => {
@@ -172,16 +162,27 @@ const RepositoryCard = ({
 }: {
   repository: TrackedRepository;
   onRemove: () => void;
-  onMarkAsSeen: () => void;
+  onMarkAsSeen: () => Promise<boolean>;
 }) => {
   const { name, published_at, seen, tag_name } = repository;
+  const [isFetching, setIsFetching] = useState(false);
   return (
     <Card key={name} className="gap-1">
       <CardHeader className="gap-0">
         <CardTitle className="flex items-center gap-2">
           <span className="flex-1">{name}</span>
           {!seen && (
-            <Button size="sm" variant="outline" onClick={onMarkAsSeen}>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isFetching}
+              onClick={() => {
+                setIsFetching(true);
+                onMarkAsSeen().finally(() => {
+                  setIsFetching(false);
+                });
+              }}
+            >
               Mark as seen
             </Button>
           )}

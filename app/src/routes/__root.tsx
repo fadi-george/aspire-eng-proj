@@ -14,7 +14,6 @@ export const Route = createRootRoute({
             // error: "!bg-red-100",
           },
         }}
-        duration={Infinity}
       />
       <main className="h-screen">
         <Outlet />

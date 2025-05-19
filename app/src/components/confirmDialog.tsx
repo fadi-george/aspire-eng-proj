@@ -12,12 +12,14 @@ import { AlertDialogAction } from "./ui/alert-dialog";
 
 export const ConfirmDialog = ({
   open,
+  isFetching = false,
   title = "Are you sure?",
   description,
   onConfirm,
   onCancel,
 }: {
   open: boolean;
+  isFetching?: boolean;
   title?: string;
   description?: string;
   onConfirm: () => void;
@@ -33,8 +35,14 @@ export const ConfirmDialog = ({
           )}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
-          <AlertDialogAction className="bg-red-600" onClick={onConfirm}>
+          <AlertDialogCancel onClick={onCancel} disabled={isFetching}>
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-red-600"
+            onClick={onConfirm}
+            disabled={isFetching}
+          >
             Continue
           </AlertDialogAction>
         </AlertDialogFooter>
