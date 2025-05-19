@@ -37,8 +37,18 @@ export const RepositoryList = () => {
   const { mutate: untrackRepo, isPending: isRemovingRepo } = useMutation({
     mutationFn: ({ name, owner }: { name: string; owner: string }) =>
       untrackRepository(name, owner),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["trackedRepositories"] });
+    onSuccess: (_, { name, owner }) => {
+      queryClient.setQueriesData<TrackedRepository[]>(
+        {
+          queryKey: ["trackedRepositories"],
+        },
+        (data) => {
+          if (!data) return [];
+          return data.filter(
+            (repo) => repo.name !== name && repo.owner !== owner,
+          );
+        },
+      );
       setDeleteRepoInfo(null);
       toast.success("Repository untracked successfully!");
     },
@@ -47,8 +57,20 @@ export const RepositoryList = () => {
   const { mutateAsync: markAsSeen } = useMutation({
     mutationFn: ({ name, owner }: { name: string; owner: string }) =>
       markRepositoryAsSeen(name, owner),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["trackedRepositories"] });
+    onSuccess: (_, { name, owner }) => {
+      queryClient.setQueriesData<TrackedRepository[]>(
+        {
+          queryKey: ["trackedRepositories"],
+        },
+        (data) => {
+          if (!data) return [];
+          return data.map((repo) =>
+            repo.name === name && repo.owner === owner
+              ? { ...repo, seen: true }
+              : repo,
+          );
+        },
+      );
     },
   });
 
