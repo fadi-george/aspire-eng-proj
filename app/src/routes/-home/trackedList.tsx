@@ -1,20 +1,26 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Package, RefreshCcw, X } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { ConfirmDialog } from "../../components/confirmDialog";
-import { Button } from "../../components/ui/button";
+import { ConfirmDialog } from "@/components/confirmDialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Skeleton } from "../../components/ui/skeleton";
-import { formatDate } from "../../lib/general";
-import { getTrackedRepositories, untrackRepository } from "../../lib/graphql";
-import { cn } from "../../lib/utils";
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/lib/general";
+import {
+  getTrackedRepositories,
+  markRepositoryAsSeen,
+  untrackRepository,
+  type TrackedRepository,
+} from "@/lib/graphql";
+import { cn } from "@/lib/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Calendar, Package, RefreshCcw, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export const RepositoryList = () => {
   const queryClient = useQueryClient();
@@ -28,6 +34,10 @@ export const RepositoryList = () => {
     queryFn: getTrackedRepositories,
   });
 
+  useEffect(() => {
+    toast.success("Repository marked as seen!");
+  }, []);
+
   const { mutate: untrackRepo } = useMutation({
     mutationFn: ({ name, owner }: { name: string; owner: string }) =>
       untrackRepository(name, owner),
@@ -38,6 +48,14 @@ export const RepositoryList = () => {
     },
   });
 
+  const { mutate: markAsSeen } = useMutation({
+    mutationFn: ({ name, owner }: { name: string; owner: string }) =>
+      markRepositoryAsSeen(name, owner),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trackedRepositories"] });
+    },
+  });
+
   const [deleteRepoInfo, setDeleteRepoInfo] = useState<{
     name: string;
     owner: string;
@@ -45,6 +63,10 @@ export const RepositoryList = () => {
 
   const handleDeleteRepo = (name: string, owner: string) => {
     untrackRepo({ name, owner });
+  };
+
+  const handleMarkAsSeen = (name: string, owner: string) => {
+    markAsSeen({ name, owner });
   };
 
   return (
@@ -81,46 +103,20 @@ export const RepositoryList = () => {
           ) : (
             <>
               {repositories?.map((repository) => {
-                const { name, published_at, tag_name } = repository;
                 return (
-                  <Card key={name} className="gap-1">
-                    <CardHeader className="gap-0">
-                      <CardTitle className="flex items-center gap-2">
-                        <span className="flex-1">{name}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            setDeleteRepoInfo({
-                              name,
-                              owner: repository.owner,
-                            })
-                          }
-                        >
-                          <X />
-                        </Button>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription>
-                        {tag_name && (
-                          <div className="flex items-center gap-4 mb-2 [&>span]:flex [&>span]:items-center [&>span]:gap-1 [&>span>svg]:size-5">
-                            <span>
-                              <Package />
-                              {repository.tag_name}
-                            </span>
-                            {published_at && (
-                              <span>
-                                <Calendar />
-                                {formatDate(published_at)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        <span>{repository.description}</span>
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
+                  <RepositoryCard
+                    key={repository.name}
+                    repository={repository}
+                    onRemove={() =>
+                      setDeleteRepoInfo({
+                        name: repository.name,
+                        owner: repository.owner,
+                      })
+                    }
+                    onMarkAsSeen={() => {
+                      handleMarkAsSeen(repository.name, repository.owner);
+                    }}
+                  />
                 );
               })}
             </>
@@ -148,17 +144,74 @@ const LoadingCard = () => {
   return (
     <Card className="gap-1">
       <CardHeader>
-        <CardTitle>
-          <Skeleton className="w-full h-5 mt-2" />
+        <CardTitle className="flex items-center gap-2 justify-between mt-2">
+          <Skeleton className="w-3/4 h-5" />
+          <Skeleton className="w-[30px] h-5" />
         </CardTitle>
       </CardHeader>
       <CardContent>
         <CardDescription className="mt-2">
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-4">
             <Skeleton className="w-15 h-4" />
             <Skeleton className="w-17 h-4" />
           </div>
-          <Skeleton className="w-full h-4 mt-2" />
+          <div>
+            <Skeleton className="w-full h-4 mt-2" />
+            <Skeleton className="w-1/2 h-4 mt-2" />
+          </div>
+        </CardDescription>
+      </CardContent>
+    </Card>
+  );
+};
+
+const RepositoryCard = ({
+  repository,
+  onRemove,
+  onMarkAsSeen,
+}: {
+  repository: TrackedRepository;
+  onRemove: () => void;
+  onMarkAsSeen: () => void;
+}) => {
+  const { name, published_at, seen, tag_name } = repository;
+  return (
+    <Card key={name} className="gap-1">
+      <CardHeader className="gap-0">
+        <CardTitle className="flex items-center gap-2">
+          <span className="flex-1">{name}</span>
+          {!seen && (
+            <Button size="sm" variant="outline" onClick={onMarkAsSeen}>
+              Mark as seen
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={onRemove}>
+            <X />
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <CardDescription>
+          {tag_name && (
+            <div className="flex items-center gap-4 mt-2 [&>span]:flex [&>span]:items-center [&>span]:gap-1 [&>span>svg]:size-5">
+              <span>
+                <Package />
+                {repository.tag_name}
+                {!seen && (
+                  <Badge className="border-yellow-500 bg-yellow-100 text-yellow-800 rounded-lg leading-[1.25] ">
+                    New
+                  </Badge>
+                )}
+              </span>
+              {published_at && (
+                <span>
+                  <Calendar />
+                  {formatDate(published_at)}
+                </span>
+              )}
+            </div>
+          )}
+          <div className="mt-3 line-clamp-2">{repository.description}</div>
         </CardDescription>
       </CardContent>
     </Card>

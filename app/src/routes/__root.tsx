@@ -6,7 +6,16 @@ import { Toaster } from "sonner";
 export const Route = createRootRoute({
   component: () => (
     <>
-      <Toaster position="bottom-right" />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          classNames: {
+            // success: "!bg-green-50",
+            // error: "!bg-red-100",
+          },
+        }}
+        duration={Infinity}
+      />
       <main className="h-screen">
         <Outlet />
         {/* <TanStackRouterDevtools /> */}

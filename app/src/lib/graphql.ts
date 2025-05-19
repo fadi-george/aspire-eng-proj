@@ -15,6 +15,7 @@ export interface Repository {
 }
 
 export interface TrackedRepository extends Omit<Repository, "id"> {
+  seen: boolean;
   tag_name: string | null;
   published_at: string | null;
 }
@@ -38,6 +39,10 @@ interface UntrackRepositoryResponse {
 
 interface TrackedRepositoriesResponse {
   trackedRepositories: TrackedRepository[];
+}
+
+interface MarkRepositoryAsSeenResponse {
+  markRepositoryAsSeen: boolean;
 }
 
 // Example query to get the hello message
@@ -78,14 +83,15 @@ export const trackRepository = async (name: string, owner: string) => {
   const mutation = `
     mutation TrackRepository($name: String!, $owner: String!) {
       trackRepository(name: $name, owner: $owner) {
-        name
         description
-        url
-        stars
         language
+        name
         owner
-        tag_name
         published_at
+        seen
+        stars
+        tag_name
+        url
       }
     }
   `;
@@ -114,18 +120,32 @@ export const getTrackedRepositories = async () => {
   const query = `
     query {
       trackedRepositories {
-        name
         description
-        url
-        stars
         language
+        name
         owner
-        tag_name
         published_at
+        seen
+        stars
+        tag_name
+        url
       }
     }
   `;
   const response =
     await graphqlClient.request<TrackedRepositoriesResponse>(query);
   return response.trackedRepositories;
+};
+
+export const markRepositoryAsSeen = async (name: string, owner: string) => {
+  const mutation = `
+    mutation MarkRepositoryAsSeen($name: String!, $owner: String!) {
+      markRepositoryAsSeen(name: $name, owner: $owner)
+    }
+  `;
+  const response = await graphqlClient.request<MarkRepositoryAsSeenResponse>(
+    mutation,
+    { name, owner },
+  );
+  return response.markRepositoryAsSeen;
 };

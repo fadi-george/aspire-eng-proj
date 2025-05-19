@@ -121,3 +121,16 @@
     @apply text-2xl font-bold;
   }
 }
+
+@theme {
+  --line-clamp-1: 1;
+  --line-clamp-2: 2;
+  --line-clamp-3: 3;
+}
+
+@utility line-clamp-* {
+  display: -webkit-box;
+  -webkit-line-clamp: var(--line-clamp);
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -8,18 +8,28 @@ const octokit = new Octokit({
 const trackedRepositories: {
   name: string;
   owner: string;
+  seen: boolean;
 }[] = [];
 
 async function fetchRepositoryInfo(name: string, owner: string) {
   try {
+    console.log("Fetching repository info for", name, owner);
     const repoInfo = await octokit.rest.repos.get({
       owner,
       repo: name,
     });
-    const releaseInfo = await octokit.rest.repos.getLatestRelease({
-      owner,
-      repo: name,
-    });
+    console.log("Repository info fetched", repoInfo);
+
+    let releaseInfo = { data: { tag_name: null, published_at: null } };
+    try {
+      releaseInfo = await octokit.rest.repos.getLatestRelease({
+        owner,
+        repo: name,
+      });
+      console.log("Release info fetched", releaseInfo);
+    } catch (error) {
+      console.log("No releases found for repository");
+    }
 
     return {
       name,
@@ -64,15 +74,16 @@ const yoga = createYoga({
       }
 
       type TrackedRepository {
-        id: String!
-        name: String!
         description: String
-        url: String!
-        stars: Int!
+        id: String!
         language: String
+        name: String!
         owner: String!
-        tag_name: String
         published_at: String
+        seen: Boolean!
+        stars: Int!
+        tag_name: String
+        url: String!
       }
 
       type Query {
@@ -84,6 +95,7 @@ const yoga = createYoga({
       type Mutation {
         trackRepository(name: String!, owner: String!): TrackedRepository!
         untrackRepository(name: String!, owner: String!): Boolean!
+        markRepositoryAsSeen(name: String!, owner: String!): Boolean!
       }
     `,
     resolvers: {
@@ -109,9 +121,10 @@ const yoga = createYoga({
         },
         trackedRepositories: async () => {
           const repos = await Promise.all(
-            trackedRepositories.map((repo) =>
-              fetchRepositoryInfo(repo.name, repo.owner)
-            )
+            trackedRepositories.map(async (repo) => {
+              const repoInfo = await fetchRepositoryInfo(repo.name, repo.owner);
+              return { ...repoInfo, seen: repo.seen };
+            })
           );
           return repos;
         },
@@ -119,8 +132,8 @@ const yoga = createYoga({
       Mutation: {
         trackRepository: async (_, { name, owner }) => {
           const repo = await fetchRepositoryInfo(name, owner);
-          trackedRepositories.push({ name, owner });
-          return repo;
+          trackedRepositories.push({ name, owner, seen: false });
+          return { ...repo, seen: false };
         },
         untrackRepository: async (_, { name, owner }) => {
           const index = trackedRepositories.findIndex(
@@ -132,6 +145,17 @@ const yoga = createYoga({
           }
 
           trackedRepositories.splice(index, 1);
+          return true;
+        },
+        markRepositoryAsSeen: async (_, { name, owner }) => {
+          const index = trackedRepositories.findIndex(
+            (repo) => repo.name === name && repo.owner === owner
+          );
+          if (index === -1) {
+            throw new Error("Repository not found in tracked list");
+          }
+
+          trackedRepositories[index].seen = true;
           return true;
         },
       },

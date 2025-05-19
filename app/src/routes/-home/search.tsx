@@ -1,6 +1,3 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
 import {
   Command,
   CommandEmpty,
@@ -8,14 +5,17 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "../../components/ui/command";
-import { useDebounce } from "../../hooks/useDebounce";
-import { formatNumber } from "../../lib/general";
+} from "@/components/ui/command";
+import { useDebounce } from "@/hooks/useDebounce";
+import { formatNumber } from "@/lib/general";
 import {
   searchRepositories,
   trackRepository,
   type Repository,
-} from "../../lib/graphql";
+} from "@/lib/graphql";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 export const Search = () => {
   // const [open, setOpen] = useState(false);
