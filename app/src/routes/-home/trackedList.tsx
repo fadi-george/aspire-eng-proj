@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { Calendar, Package, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "../../components/confirmDialog";
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/card";
+import { formatDate } from "../../lib/general";
 import { getTrackedRepositories, untrackRepository } from "../../lib/graphql";
 
 export const RepositoryList = () => {
@@ -47,29 +48,48 @@ export const RepositoryList = () => {
         {isLoading ? (
           <div>Loading...</div>
         ) : (
-          <div className="mt-3 flex flex-col gap-2">
-            {repositories?.map((repository) => (
-              <Card key={repository.name}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <span className="flex-1">{repository.name}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() =>
-                        setDeleteRepoInfo({
-                          name: repository.name,
-                          owner: repository.owner,
-                        })
-                      }
-                    >
-                      <X />
-                    </Button>
-                  </CardTitle>
-                  <CardDescription>{repository.description}</CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
+          <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(330px,1fr))] gap-4">
+            {repositories?.map((repository) => {
+              const { name, published_at, tag_name } = repository;
+              return (
+                <Card key={name}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <span className="flex-1">{name}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          setDeleteRepoInfo({
+                            name,
+                            owner: repository.owner,
+                          })
+                        }
+                      >
+                        <X />
+                      </Button>
+                    </CardTitle>
+                    <CardDescription>
+                      {tag_name && (
+                        <div className="flex items-center gap-4 mb-2 [&>span]:flex [&>span]:items-center [&>span]:gap-1 [&>span>svg]:size-5">
+                          <span>
+                            <Package />
+                            {repository.tag_name}
+                          </span>
+                          {published_at && (
+                            <span>
+                              <Calendar />
+                              {formatDate(published_at)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <span>{repository.description}</span>
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

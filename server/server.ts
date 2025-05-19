@@ -1,7 +1,9 @@
 import { createSchema, createYoga } from "graphql-yoga";
 import { Octokit } from "octokit";
 
-const octokit = new Octokit();
+const octokit = new Octokit({
+  auth: process.env.GITHUB_PAT,
+});
 
 const trackedRepositories: {
   name: string;
@@ -10,7 +12,11 @@ const trackedRepositories: {
 
 async function fetchRepositoryInfo(name: string, owner: string) {
   try {
-    const response = await octokit.rest.repos.get({
+    const repoInfo = await octokit.rest.repos.get({
+      owner,
+      repo: name,
+    });
+    const releaseInfo = await octokit.rest.repos.getLatestRelease({
       owner,
       repo: name,
     });
@@ -18,10 +24,12 @@ async function fetchRepositoryInfo(name: string, owner: string) {
     return {
       name,
       owner,
-      url: response.data.html_url,
-      stars: response.data.stargazers_count,
-      language: response.data.language,
-      description: response.data.description,
+      url: repoInfo.data.html_url,
+      stars: repoInfo.data.stargazers_count,
+      language: repoInfo.data.language,
+      description: repoInfo.data.description,
+      tag_name: releaseInfo.data.tag_name,
+      published_at: releaseInfo.data.published_at,
     };
   } catch (error: any) {
     throw new Error(`Failed to fetch repository: ${error.message}`);
@@ -29,20 +37,24 @@ async function fetchRepositoryInfo(name: string, owner: string) {
 }
 
 interface GitHubRepository {
-  name: string;
+  id: number;
   description: string | null;
   html_url: string;
-  stargazers_count: number;
   language: string | null;
+  name: string;
   owner: {
     login: string;
   };
+  published_at: string | null;
+  stargazers_count: number;
+  tag_name: string | null;
 }
 
 const yoga = createYoga({
   schema: createSchema({
     typeDefs: /* GraphQL */ `
       type Repository {
+        id: String!
         name: String!
         description: String
         url: String!
@@ -51,14 +63,26 @@ const yoga = createYoga({
         owner: String!
       }
 
+      type TrackedRepository {
+        id: String!
+        name: String!
+        description: String
+        url: String!
+        stars: Int!
+        language: String
+        owner: String!
+        tag_name: String
+        published_at: String
+      }
+
       type Query {
         hello: String
         searchRepositories(query: String!, limit: Int = 10): [Repository!]!
-        trackedRepositories: [Repository!]!
+        trackedRepositories: [TrackedRepository!]!
       }
 
       type Mutation {
-        trackRepository(name: String!, owner: String!): Repository!
+        trackRepository(name: String!, owner: String!): TrackedRepository!
         untrackRepository(name: String!, owner: String!): Boolean!
       }
     `,
@@ -74,6 +98,7 @@ const yoga = createYoga({
           });
 
           return response.data.items.map((repo: GitHubRepository) => ({
+            id: repo.id,
             name: repo.name,
             description: repo.description,
             url: repo.html_url,

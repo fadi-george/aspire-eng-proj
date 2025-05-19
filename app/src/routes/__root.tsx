@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 export const Route = createRootRoute({
   component: () => (
     <>
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
       <main className="h-screen">
         <Outlet />
         {/* <TanStackRouterDevtools /> */}

@@ -5,12 +5,18 @@ export const graphqlClient = new GraphQLClient("http://localhost:4000/graphql");
 
 // Define the Repository type
 export interface Repository {
+  id: string;
   name: string;
   description: string | null;
   url: string;
   stars: number;
   language: string | null;
   owner: string;
+}
+
+export interface TrackedRepository extends Omit<Repository, "id"> {
+  tag_name: string | null;
+  published_at: string | null;
 }
 
 // Define response types
@@ -31,7 +37,7 @@ interface UntrackRepositoryResponse {
 }
 
 interface TrackedRepositoriesResponse {
-  trackedRepositories: Repository[];
+  trackedRepositories: TrackedRepository[];
 }
 
 // Example query to get the hello message
@@ -50,6 +56,7 @@ export const searchRepositories = async (query: string, limit: number = 10) => {
   const gqlQuery = `
     query SearchRepositories($query: String!, $limit: Int!) {
       searchRepositories(query: $query, limit: $limit) {
+        id
         name
         description
         url
@@ -77,6 +84,8 @@ export const trackRepository = async (name: string, owner: string) => {
         stars
         language
         owner
+        tag_name
+        published_at
       }
     }
   `;
@@ -111,6 +120,8 @@ export const getTrackedRepositories = async () => {
         stars
         language
         owner
+        tag_name
+        published_at
       }
     }
   `;

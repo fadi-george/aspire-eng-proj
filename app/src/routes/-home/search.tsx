@@ -23,6 +23,7 @@ export const Search = () => {
   const debouncedSearch = useDebounce(search, 500);
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [disableSet, setDisableSet] = useState<Set<string>>(new Set());
 
   // Example of using the search repositories query
   const { data: repositories = [], isLoading: isLoadingRepos } = useQuery({
@@ -32,8 +33,14 @@ export const Search = () => {
   });
 
   const { mutate: trackRepo } = useMutation({
-    mutationFn: ({ name, owner }: { name: string; owner: string }) =>
-      trackRepository(name, owner),
+    mutationFn: ({
+      name,
+      owner,
+    }: {
+      id: string;
+      name: string;
+      owner: string;
+    }) => trackRepository(name, owner),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trackedRepositories"] });
       toast.success("Repository tracked successfully!");
@@ -41,14 +48,16 @@ export const Search = () => {
     onError: (error) => {
       toast.error(`Failed to track repository: ${error.message}`);
     },
+    onSettled: (_, __, { id }) => {
+      const newSet = new Set(disableSet);
+      newSet.delete(id);
+      setDisableSet(newSet);
+    },
   });
 
-  const handleTrackRepository = (repository: Repository) => {
-    console.log("tracking repository", repository, {
-      name: repository.name,
-      owner: repository.owner,
-    });
-    trackRepo({ name: repository.name, owner: repository.owner });
+  const handleTrackRepository = ({ id, name, owner }: Repository) => {
+    setDisableSet(new Set([...disableSet, id]));
+    trackRepo({ id, name, owner });
     setSearch("");
   };
 
@@ -80,6 +89,7 @@ export const Search = () => {
                   key={repository.url}
                   value={repository.url}
                   onSelect={() => handleTrackRepository(repository)}
+                  disabled={disableSet.has(repository.id)}
                 >
                   <div className="flex items-center gap-2 justify-between w-full">
                     <div className="flex flex-col overflow-hidden flex-1 ">
