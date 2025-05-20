@@ -10,14 +10,14 @@ export const Route = createFileRoute("/login/")({
 });
 
 function RouteComponent() {
-  const { user, login } = useAuth();
+  const { getToken, login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
+    if (getToken()) {
       navigate({ to: "/" });
     }
-  }, [user, navigate]);
+  }, [getToken, navigate]);
 
   return (
     <div className="flex flex-col items-center h-full">

@@ -13,14 +13,14 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/repo/$owner/$name")({
+export const Route = createFileRoute("/_auth/repo/$owner/$name")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const navigate = useNavigate({ from: "/repo/$owner/$name" });
   const { owner, name } = useParams({
-    from: "/repo/$owner/$name",
+    from: "/_auth/repo/$owner/$name",
   });
 
   const {

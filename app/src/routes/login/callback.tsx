@@ -2,12 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+
 export const Route = createFileRoute("/login/callback")({
   component: LoginCallback,
   validateSearch: (search) => {
     return z
       .object({
         code: z.string(),
+        redirect: z.string().optional(),
       })
       .parse(search);
   },
@@ -15,7 +17,7 @@ export const Route = createFileRoute("/login/callback")({
 
 function LoginCallback() {
   const navigate = useNavigate();
-  const { code } = Route.useSearch();
+  const { code, redirect } = Route.useSearch();
 
   useEffect(() => {
     if (!code) {
@@ -36,7 +38,7 @@ function LoginCallback() {
         if (response.ok) {
           const { access_token } = await response.json();
           localStorage.setItem("github_token", access_token);
-          navigate({ to: "/" });
+          navigate({ to: redirect || "/" });
           return;
         }
         throw new Error("Failed to exchange code for token");
@@ -48,7 +50,7 @@ function LoginCallback() {
     };
 
     getToken();
-  }, [navigate, code]);
+  }, [navigate, code, redirect]);
 
   return null;
 }

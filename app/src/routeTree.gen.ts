@@ -11,16 +11,16 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as IndexImport } from './routes/index'
+import { Route as AuthImport } from './routes/_auth'
 import { Route as LoginIndexImport } from './routes/login/index'
+import { Route as AuthIndexImport } from './routes/_auth/index'
 import { Route as LoginCallbackImport } from './routes/login/callback'
-import { Route as RepoOwnerNameImport } from './routes/repo/$owner/$name'
+import { Route as AuthRepoOwnerNameImport } from './routes/_auth/repo/$owner/$name'
 
 // Create/Update Routes
 
-const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -30,27 +30,33 @@ const LoginIndexRoute = LoginIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AuthIndexRoute = AuthIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthRoute,
+} as any)
+
 const LoginCallbackRoute = LoginCallbackImport.update({
   id: '/login/callback',
   path: '/login/callback',
   getParentRoute: () => rootRoute,
 } as any)
 
-const RepoOwnerNameRoute = RepoOwnerNameImport.update({
+const AuthRepoOwnerNameRoute = AuthRepoOwnerNameImport.update({
   id: '/repo/$owner/$name',
   path: '/repo/$owner/$name',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => AuthRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthImport
       parentRoute: typeof rootRoute
     }
     '/login/callback': {
@@ -60,6 +66,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginCallbackImport
       parentRoute: typeof rootRoute
     }
+    '/_auth/': {
+      id: '/_auth/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthIndexImport
+      parentRoute: typeof AuthImport
+    }
     '/login/': {
       id: '/login/'
       path: '/login'
@@ -67,61 +80,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginIndexImport
       parentRoute: typeof rootRoute
     }
-    '/repo/$owner/$name': {
-      id: '/repo/$owner/$name'
+    '/_auth/repo/$owner/$name': {
+      id: '/_auth/repo/$owner/$name'
       path: '/repo/$owner/$name'
       fullPath: '/repo/$owner/$name'
-      preLoaderRoute: typeof RepoOwnerNameImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof AuthRepoOwnerNameImport
+      parentRoute: typeof AuthImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface AuthRouteChildren {
+  AuthIndexRoute: typeof AuthIndexRoute
+  AuthRepoOwnerNameRoute: typeof AuthRepoOwnerNameRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthIndexRoute: AuthIndexRoute,
+  AuthRepoOwnerNameRoute: AuthRepoOwnerNameRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '': typeof AuthRouteWithChildren
   '/login/callback': typeof LoginCallbackRoute
+  '/': typeof AuthIndexRoute
   '/login': typeof LoginIndexRoute
-  '/repo/$owner/$name': typeof RepoOwnerNameRoute
+  '/repo/$owner/$name': typeof AuthRepoOwnerNameRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/login/callback': typeof LoginCallbackRoute
+  '/': typeof AuthIndexRoute
   '/login': typeof LoginIndexRoute
-  '/repo/$owner/$name': typeof RepoOwnerNameRoute
+  '/repo/$owner/$name': typeof AuthRepoOwnerNameRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexRoute
+  '/_auth': typeof AuthRouteWithChildren
   '/login/callback': typeof LoginCallbackRoute
+  '/_auth/': typeof AuthIndexRoute
   '/login/': typeof LoginIndexRoute
-  '/repo/$owner/$name': typeof RepoOwnerNameRoute
+  '/_auth/repo/$owner/$name': typeof AuthRepoOwnerNameRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login/callback' | '/login' | '/repo/$owner/$name'
+  fullPaths: '' | '/login/callback' | '/' | '/login' | '/repo/$owner/$name'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login/callback' | '/login' | '/repo/$owner/$name'
-  id: '__root__' | '/' | '/login/callback' | '/login/' | '/repo/$owner/$name'
+  to: '/login/callback' | '/' | '/login' | '/repo/$owner/$name'
+  id:
+    | '__root__'
+    | '/_auth'
+    | '/login/callback'
+    | '/_auth/'
+    | '/login/'
+    | '/_auth/repo/$owner/$name'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
   LoginCallbackRoute: typeof LoginCallbackRoute
   LoginIndexRoute: typeof LoginIndexRoute
-  RepoOwnerNameRoute: typeof RepoOwnerNameRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthRoute: AuthRouteWithChildren,
   LoginCallbackRoute: LoginCallbackRoute,
   LoginIndexRoute: LoginIndexRoute,
-  RepoOwnerNameRoute: RepoOwnerNameRoute,
 }
 
 export const routeTree = rootRoute
@@ -134,23 +165,31 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/",
+        "/_auth",
         "/login/callback",
-        "/login/",
-        "/repo/$owner/$name"
+        "/login/"
       ]
     },
-    "/": {
-      "filePath": "index.tsx"
+    "/_auth": {
+      "filePath": "_auth.tsx",
+      "children": [
+        "/_auth/",
+        "/_auth/repo/$owner/$name"
+      ]
     },
     "/login/callback": {
       "filePath": "login/callback.tsx"
     },
+    "/_auth/": {
+      "filePath": "_auth/index.tsx",
+      "parent": "/_auth"
+    },
     "/login/": {
       "filePath": "login/index.tsx"
     },
-    "/repo/$owner/$name": {
-      "filePath": "repo/$owner/$name.tsx"
+    "/_auth/repo/$owner/$name": {
+      "filePath": "_auth/repo/$owner/$name.tsx",
+      "parent": "/_auth"
     }
   }
 }

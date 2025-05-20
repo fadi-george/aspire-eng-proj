@@ -40,6 +40,31 @@ app.post("/api/auth/github", async (c) => {
   }
 });
 
+app.get("/api/auth/me", async (c) => {
+  try {
+    const authHeader = c.req.header("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return c.json({ error: "No token provided" }, 401);
+    }
+
+    const token = authHeader.split(" ")[1];
+    const response = await fetch("https://api.github.com/user", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return c.json({ error: "Invalid token" }, 401);
+    }
+
+    const userData = await response.json();
+    return c.json(userData);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // GraphQL endpoint
 app.all("/graphql", async (c) => {
   return yoga(c.req.raw);
