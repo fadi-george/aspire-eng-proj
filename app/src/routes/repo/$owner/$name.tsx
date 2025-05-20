@@ -34,8 +34,6 @@ function RouteComponent() {
     enabled: !!owner && !!name,
   });
 
-  console.log("repository", repository);
-
   if (!owner || !name) {
     return <Navigate to="/" />;
   }
