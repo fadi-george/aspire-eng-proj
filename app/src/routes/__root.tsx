@@ -7,15 +7,15 @@ export const Route = createRootRoute({
   component: () => (
     <>
       <Toaster
+        richColors
         position="bottom-right"
-        toastOptions={{
-          classNames: {
-            // success: "!bg-green-50",
-            // error: "!bg-red-100",
-          },
-        }}
+        // toastOptions={{
+        //   classNames: {
+        //     error: "!bg-red-500 !text-white",
+        //   },
+        // }}
       />
-      <main className="h-screen">
+      <main className="h-screen p-12 max-w-7xl m-auto">
         <Outlet />
         {/* <TanStackRouterDevtools /> */}
       </main>

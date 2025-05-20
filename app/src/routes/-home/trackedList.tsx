@@ -1,4 +1,5 @@
 import { ConfirmDialog } from "@/components/confirmDialog";
+import { RefreshButton } from "@/components/refreshButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,9 +17,9 @@ import {
   untrackRepository,
   type TrackedRepository,
 } from "@/lib/graphql";
-import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Package, RefreshCcw, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Calendar, Package, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -29,6 +30,7 @@ export const RepositoryList = () => {
     isFetched,
     isLoading,
     isFetching,
+    refetch,
   } = useQuery({
     queryKey: ["trackedRepositories"],
     queryFn: getTrackedRepositories,
@@ -86,18 +88,7 @@ export const RepositoryList = () => {
         <span className="flex items-center gap-2 justify-between pb-2">
           <h2>Tracked Repositories</h2>
           {isFetched && (
-            <Button
-              disabled={isFetching}
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                queryClient.invalidateQueries({
-                  queryKey: ["trackedRepositories"],
-                });
-              }}
-            >
-              <RefreshCcw className={cn(isFetching && "animate-spin")} />
-            </Button>
+            <RefreshButton isFetching={isFetching} onRefresh={refetch} />
           )}
         </span>
         <hr />
@@ -132,8 +123,11 @@ export const RepositoryList = () => {
               })}
             </>
           )}
+          {isFetching && <LoadingCard />}
         </div>
       </div>
+
+      {/* Untrack Dialog */}
       <ConfirmDialog
         open={!!deleteRepoInfo}
         isFetching={isRemovingRepo}
@@ -186,10 +180,18 @@ const RepositoryCard = ({
   onRemove: () => void;
   onMarkAsSeen: () => Promise<boolean>;
 }) => {
-  const { name, published_at, seen, tag_name } = repository;
+  const navigate = useNavigate({ from: "/" });
+
+  const { owner, name, published_at, seen, tag_name } = repository;
   const [isFetching, setIsFetching] = useState(false);
   return (
-    <Card key={name} className="gap-1">
+    <Card
+      key={name}
+      className="gap-1 cursor-pointer"
+      onClick={() => {
+        navigate({ to: `/repo/${owner}/${name}` });
+      }}
+    >
       <CardHeader className="gap-0">
         <CardTitle className="flex items-center gap-2">
           <span className="flex-1">{name}</span>
@@ -198,17 +200,25 @@ const RepositoryCard = ({
               size="sm"
               variant="outline"
               disabled={isFetching}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setIsFetching(true);
                 onMarkAsSeen().finally(() => {
                   setIsFetching(false);
                 });
               }}
             >
-              Mark as seen
+              Mark seen
             </Button>
           )}
-          <Button variant="ghost" size="icon" onClick={onRemove}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+          >
             <X />
           </Button>
         </CardTitle>

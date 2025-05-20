@@ -45,6 +45,10 @@ interface MarkRepositoryAsSeenResponse {
   markRepositoryAsSeen: boolean;
 }
 
+interface GetTrackedRepositoryResponse {
+  getTrackedRepository: TrackedRepository | null;
+}
+
 // Example query to get the hello message
 export const getHello = async () => {
   const query = `
@@ -148,4 +152,27 @@ export const markRepositoryAsSeen = async (name: string, owner: string) => {
     { name, owner },
   );
   return response.markRepositoryAsSeen;
+};
+
+export const getTrackedRepository = async (owner: string, name: string) => {
+  const query = `
+    query GetTrackedRepository($owner: String!, $name: String!) {
+      getTrackedRepository(owner: $owner, name: $name) {
+        description
+        language
+        name
+        owner
+        published_at
+        seen
+        stars
+        tag_name
+        url
+      }
+    }
+  `;
+  const response = await graphqlClient.request<GetTrackedRepositoryResponse>(
+    query,
+    { owner, name },
+  );
+  return response.getTrackedRepository;
 };

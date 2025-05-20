@@ -117,6 +117,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  h1 {
+    @apply text-3xl font-bold;
+  }
   h2 {
     @apply text-2xl font-bold;
   }
@@ -130,7 +133,7 @@
 
 @utility line-clamp-* {
   display: -webkit-box;
-  -webkit-line-clamp: var(--line-clamp);
+  -webkit-line-clamp: --value(--line-clamp- *);
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

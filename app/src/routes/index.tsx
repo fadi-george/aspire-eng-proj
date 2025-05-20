@@ -4,12 +4,12 @@ import { RepositoryList } from "./-home/trackedList";
 
 function Index() {
   return (
-    <div className="p-12 max-w-7xl m-auto">
+    <>
       <div className="flex justify-center items-center">
         <Search />
       </div>
       <RepositoryList />
-    </div>
+    </>
   );
 }
 

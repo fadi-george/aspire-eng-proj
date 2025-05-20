@@ -93,7 +93,9 @@ export const Search = () => {
                 >
                   <div className="flex items-center gap-2 justify-between w-full">
                     <div className="flex flex-col overflow-hidden flex-1 ">
-                      <p className="text-sm font-medium">{repository.name}</p>
+                      <p className="text-sm font-medium">
+                        {repository.owner}/{repository.name}
+                      </p>
                       <p className="text-sm text-muted-foreground overflow-ellipsis whitespace-nowrap block overflow-hidden">
                         {repository.description}
                       </p>

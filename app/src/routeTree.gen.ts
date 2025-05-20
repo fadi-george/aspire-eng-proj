@@ -12,12 +12,19 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as RepoOwnerNameImport } from './routes/repo/$owner/$name'
 
 // Create/Update Routes
 
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const RepoOwnerNameRoute = RepoOwnerNameImport.update({
+  id: '/repo/$owner/$name',
+  path: '/repo/$owner/$name',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -32,6 +39,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/repo/$owner/$name': {
+      id: '/repo/$owner/$name'
+      path: '/repo/$owner/$name'
+      fullPath: '/repo/$owner/$name'
+      preLoaderRoute: typeof RepoOwnerNameImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -39,32 +53,37 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/repo/$owner/$name': typeof RepoOwnerNameRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/repo/$owner/$name': typeof RepoOwnerNameRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/repo/$owner/$name': typeof RepoOwnerNameRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/repo/$owner/$name'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/repo/$owner/$name'
+  id: '__root__' | '/' | '/repo/$owner/$name'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RepoOwnerNameRoute: typeof RepoOwnerNameRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RepoOwnerNameRoute: RepoOwnerNameRoute,
 }
 
 export const routeTree = rootRoute
@@ -77,11 +96,15 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/",
+        "/repo/$owner/$name"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/repo/$owner/$name": {
+      "filePath": "repo/$owner/$name.tsx"
     }
   }
 }
