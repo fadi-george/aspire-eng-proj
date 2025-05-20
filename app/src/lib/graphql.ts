@@ -20,6 +20,11 @@ export interface TrackedRepository extends Omit<Repository, "id"> {
   published_at: string | null;
 }
 
+export interface TrackedRepositoryRelease extends TrackedRepository {
+  body: string | null;
+  commit: string | null;
+}
+
 // Define response types
 interface HelloResponse {
   hello: string;
@@ -46,7 +51,7 @@ interface MarkRepositoryAsSeenResponse {
 }
 
 interface GetTrackedRepositoryResponse {
-  getTrackedRepository: TrackedRepository | null;
+  getTrackedRepository: TrackedRepositoryRelease | null;
 }
 
 // Example query to get the hello message
@@ -158,6 +163,8 @@ export const getTrackedRepository = async (owner: string, name: string) => {
   const query = `
     query GetTrackedRepository($owner: String!, $name: String!) {
       getTrackedRepository(owner: $owner, name: $name) {
+        body
+        commit
         description
         language
         name

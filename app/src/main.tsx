@@ -7,7 +7,7 @@ import "./index.css";
 import { routeTree } from "./routeTree.gen";
 
 // Create a new router instance
-const router = createRouter({ routeTree });
+const router = createRouter({ routeTree, defaultViewTransition: true });
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({

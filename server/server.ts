@@ -13,12 +13,10 @@ const trackedRepositories: {
 
 async function fetchRepositoryInfo(name: string, owner: string) {
   try {
-    console.log("Fetching repository info for", name, owner);
     const repoInfo = await octokit.rest.repos.get({
       owner,
       repo: name,
     });
-    console.log("Repository info fetched", repoInfo);
 
     let releaseInfo = { data: { tag_name: null, published_at: null } };
     try {
@@ -26,9 +24,8 @@ async function fetchRepositoryInfo(name: string, owner: string) {
         owner,
         repo: name,
       });
-      console.log("Release info fetched", releaseInfo);
     } catch (error) {
-      console.log("No releases found for repository");
+      console.info("No releases found for repository");
     }
 
     return {
@@ -63,6 +60,16 @@ interface GitHubRepository {
 const yoga = createYoga({
   schema: createSchema({
     typeDefs: /* GraphQL */ `
+      interface RepositoryBase {
+        id: String!
+        name: String!
+        description: String
+        url: String!
+        stars: Int!
+        language: String
+        owner: String!
+      }
+
       type Repository {
         id: String!
         name: String!
@@ -74,8 +81,21 @@ const yoga = createYoga({
       }
 
       type TrackedRepository {
+        name: String!
         description: String
-        id: String!
+        url: String!
+        stars: Int!
+        language: String
+        owner: String!
+        published_at: String
+        seen: Boolean!
+        tag_name: String
+      }
+
+      type TrackedRepositoryRelease {
+        body: String
+        commit: String
+        description: String
         language: String
         name: String!
         owner: String!
@@ -90,7 +110,10 @@ const yoga = createYoga({
         hello: String
         searchRepositories(query: String!, limit: Int = 10): [Repository!]!
         trackedRepositories: [TrackedRepository!]!
-        getTrackedRepository(name: String!, owner: String!): TrackedRepository
+        getTrackedRepository(
+          name: String!
+          owner: String!
+        ): TrackedRepositoryRelease
       }
 
       type Mutation {
@@ -140,7 +163,25 @@ const yoga = createYoga({
           }
 
           const repoInfo = await fetchRepositoryInfo(repo.name, repo.owner);
-          return { ...repoInfo, seen: repo.seen };
+          const release = await octokit.rest.repos.getLatestRelease({
+            owner: repo.owner,
+            repo: repo.name,
+          });
+
+          const ref = await octokit.rest.git.getRef({
+            owner: repo.owner,
+            repo: repo.name,
+            ref: `tags/${release.data.tag_name}`,
+          });
+
+          return {
+            ...repoInfo,
+            seen: repo.seen,
+            body: release.data.body,
+            commit: ref.data.object.sha,
+            published_at: release.data.published_at,
+            tag_name: release.data.tag_name,
+          };
         },
       },
       Mutation: {

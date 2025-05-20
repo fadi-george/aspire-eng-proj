@@ -1,4 +1,5 @@
 import { ConfirmDialog } from "@/components/confirmDialog";
+import { MarkSeenButton } from "@/components/markSeenButton";
 import { RefreshButton } from "@/components/refreshButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/general";
 import {
   getTrackedRepositories,
-  markRepositoryAsSeen,
   untrackRepository,
   type TrackedRepository,
 } from "@/lib/graphql";
@@ -56,26 +56,6 @@ export const RepositoryList = () => {
     },
   });
 
-  const { mutateAsync: markAsSeen } = useMutation({
-    mutationFn: ({ name, owner }: { name: string; owner: string }) =>
-      markRepositoryAsSeen(name, owner),
-    onSuccess: (_, { name, owner }) => {
-      queryClient.setQueriesData<TrackedRepository[]>(
-        {
-          queryKey: ["trackedRepositories"],
-        },
-        (data) => {
-          if (!data) return [];
-          return data.map((repo) =>
-            repo.name === name && repo.owner === owner
-              ? { ...repo, seen: true }
-              : repo,
-          );
-        },
-      );
-    },
-  });
-
   const [deleteRepoInfo, setDeleteRepoInfo] = useState<{
     name: string;
     owner: string;
@@ -83,9 +63,9 @@ export const RepositoryList = () => {
 
   return (
     <div className="flex flex-1 pt-10">
-      <div className="w-full">
+      <div className="w-full pb-5">
         {/* Header */}
-        <span className="flex items-center gap-2 justify-between pb-2">
+        <span className="flex items-center gap-2 justify-between pb-2 [view-transition-name:repo-section-header]">
           <h2>Tracked Repositories</h2>
           {isFetched && (
             <RefreshButton isFetching={isFetching} onRefresh={refetch} />
@@ -115,15 +95,11 @@ export const RepositoryList = () => {
                         owner: owner,
                       })
                     }
-                    onMarkAsSeen={() => {
-                      return markAsSeen({ name, owner });
-                    }}
                   />
                 );
               })}
             </>
           )}
-          {isFetching && <LoadingCard />}
         </div>
       </div>
 
@@ -174,16 +150,13 @@ const LoadingCard = () => {
 const RepositoryCard = ({
   repository,
   onRemove,
-  onMarkAsSeen,
 }: {
   repository: TrackedRepository;
   onRemove: () => void;
-  onMarkAsSeen: () => Promise<boolean>;
 }) => {
   const navigate = useNavigate({ from: "/" });
 
   const { owner, name, published_at, seen, tag_name } = repository;
-  const [isFetching, setIsFetching] = useState(false);
   return (
     <Card
       key={name}
@@ -195,22 +168,7 @@ const RepositoryCard = ({
       <CardHeader className="gap-0">
         <CardTitle className="flex items-center gap-2">
           <span className="flex-1">{name}</span>
-          {!seen && (
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={isFetching}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsFetching(true);
-                onMarkAsSeen().finally(() => {
-                  setIsFetching(false);
-                });
-              }}
-            >
-              Mark seen
-            </Button>
-          )}
+          {!seen && <MarkSeenButton name={name} owner={owner} />}
           <Button
             variant="ghost"
             size="icon"
