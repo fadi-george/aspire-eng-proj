@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { getCookie, setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 import jwt from "jsonwebtoken";
 import { Octokit } from "octokit";
@@ -7,9 +8,20 @@ import db from "./db";
 import { users } from "./db/schema";
 import { yoga } from "./graphql";
 
+interface JWTPayload {
+  userId: number;
+}
+
+const TOKEN_KEY = "authToken";
 const app = new Hono();
 
-app.use("/*", cors());
+app.use(
+  "/*",
+  cors({
+    credentials: true,
+    origin: "http://localhost:3000",
+  })
+);
 
 app.post("/api/auth/github", async (c) => {
   try {
@@ -46,7 +58,7 @@ app.post("/api/auth/github", async (c) => {
     const { data: userData } = await octokit.rest.users.getAuthenticated();
 
     // Upsert user data
-    await db
+    const [user] = await db
       .insert(users)
       .values({
         githubId: userData.id,
@@ -65,9 +77,21 @@ app.post("/api/auth/github", async (c) => {
       })
       .returning();
 
-    return c.json({
-      authToken: jwt.sign({ userId: userData.id }, process.env.JWT_SECRET),
+    const authToken = jwt.sign(
+      { userId: user!.id },
+      process.env.JWT_SECRET as string
+    );
+
+    // Set HTTP-only cookie
+    setCookie(c, TOKEN_KEY, authToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
     });
+
+    return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
@@ -75,13 +99,15 @@ app.post("/api/auth/github", async (c) => {
 
 app.get("/api/auth/me", async (c) => {
   try {
-    const authHeader = c.req.header("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const authToken = getCookie(c, TOKEN_KEY);
+    if (!authToken) {
       return c.json({ error: "No token provided" }, 401);
     }
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(
+      authToken,
+      process.env.JWT_SECRET!
+    ) as JWTPayload;
     const user = await db.query.users.findFirst({
       where: eq(users.id, decoded.userId),
     });
@@ -94,6 +120,17 @@ app.get("/api/auth/me", async (c) => {
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
+});
+
+app.post("/api/auth/logout", async (c) => {
+  setCookie(c, "authToken", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0, // Expire immediately
+  });
+  return c.json({ success: true });
 });
 
 // GraphQL endpoint

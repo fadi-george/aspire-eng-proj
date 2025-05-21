@@ -153,11 +153,9 @@ export const yoga = createYoga({
           return repos;
         },
         getTrackedRepository: async (_, { name, owner }) => {
-          console.log("getTrackedRepository", name, owner);
           const repo = trackedRepositories.find(
             (repo) => repo.name === name && repo.owner === owner
           );
-          console.log("repo", repo);
           if (!repo) {
             return null;
           }

@@ -1,4 +1,3 @@
-import { TOKEN_KEY } from "@/lib/auth-provider";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -33,14 +32,16 @@ function LoginCallback() {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify({ code }),
         });
 
         if (response.ok) {
-          const { token } = await response.json();
-          localStorage.setItem(TOKEN_KEY, token);
-          navigate({ to: redirect || "/" });
-          return;
+          const { success } = await response.json();
+          if (success) {
+            navigate({ to: redirect || "/" });
+            return;
+          }
         }
         throw new Error("Failed to exchange code for token");
       } catch (err) {

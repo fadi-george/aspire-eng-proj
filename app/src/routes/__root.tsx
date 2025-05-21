@@ -11,18 +11,9 @@ export const Route = createRootRoute({
 
 function Root() {
   const { user, logout } = useAuth();
-  console.log("Root", user);
   return (
     <>
-      <Toaster
-        richColors
-        position="bottom-right"
-        // toastOptions={{
-        //   classNames: {
-        //     error: "!bg-red-500 !text-white",
-        //   },
-        // }}
-      />
+      <Toaster richColors position="bottom-right" />
       <header className="px-12 max-w-7xl m-auto pt-3">
         {user ? <Button onClick={logout}>Logout</Button> : null}
       </header>

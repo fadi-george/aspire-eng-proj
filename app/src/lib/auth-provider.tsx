@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { AuthContext, type User } from "./auth-context";
 
-export const TOKEN_KEY = "authToken";
-
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
 const GITHUB_REDIRECT_URI =
   import.meta.env.VITE_GITHUB_REDIRECT_URI ||
@@ -16,25 +14,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = githubAuthUrl;
   };
 
-  const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
+  const logout = async () => {
+    try {
+      await fetch("http://localhost:4000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
     setUser(null);
     window.location.href = "/login";
   };
 
-  const getToken = () => localStorage.getItem(TOKEN_KEY);
-
   const getUser = async () => {
-    const token = getToken();
-    if (!token) {
-      return null;
-    }
-
     try {
       const response = await fetch("http://localhost:4000/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       if (response.ok) {
@@ -51,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ getToken, getUser, user, login, logout }}>
+    <AuthContext.Provider value={{ getUser, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
