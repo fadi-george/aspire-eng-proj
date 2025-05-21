@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AuthContext, type User } from "./auth-context";
 
-const TOKEN_KEY = "github_token";
+export const TOKEN_KEY = "authToken";
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
 const GITHUB_REDIRECT_URI =

@@ -1,3 +1,4 @@
+import { TOKEN_KEY } from "@/lib/auth-provider";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -36,8 +37,8 @@ function LoginCallback() {
         });
 
         if (response.ok) {
-          const { access_token } = await response.json();
-          localStorage.setItem("github_token", access_token);
+          const { token } = await response.json();
+          localStorage.setItem(TOKEN_KEY, token);
           navigate({ to: redirect || "/" });
           return;
         }

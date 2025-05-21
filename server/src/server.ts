@@ -1,5 +1,10 @@
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import jwt from "jsonwebtoken";
+import { Octokit } from "octokit";
+import db from "./db";
+import { users } from "./db/schema";
 import { yoga } from "./graphql";
 
 const app = new Hono();
@@ -34,7 +39,35 @@ app.post("/api/auth/github", async (c) => {
     }
 
     const data = await response.json();
-    return c.json({ access_token: data.access_token });
+    const token = data.access_token;
+
+    // Fetch user info from GitHub
+    const octokit = new Octokit({ auth: token });
+    const { data: userData } = await octokit.rest.users.getAuthenticated();
+
+    // Upsert user data
+    await db
+      .insert(users)
+      .values({
+        githubId: userData.id,
+        username: userData.login,
+        name: userData.name,
+        avatarUrl: userData.avatar_url,
+      })
+      .onConflictDoUpdate({
+        target: users.githubId,
+        set: {
+          username: userData.login,
+          name: userData.name,
+          avatarUrl: userData.avatar_url,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+
+    return c.json({
+      authToken: jwt.sign({ userId: userData.id }, process.env.JWT_SECRET),
+    });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
@@ -48,18 +81,16 @@ app.get("/api/auth/me", async (c) => {
     }
 
     const token = authHeader.split(" ")[1];
-    const response = await fetch("https://api.github.com/user", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, decoded.userId),
     });
 
-    if (!response.ok) {
-      return c.json({ error: "Invalid token" }, 401);
+    if (!user) {
+      return c.json({ error: "User not found" }, 401);
     }
 
-    const userData = await response.json();
-    return c.json(userData);
+    return c.json(user);
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
