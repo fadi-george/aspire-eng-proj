@@ -2,15 +2,12 @@ import { useState } from "react";
 import { AuthContext, type User } from "./auth-context";
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
-const GITHUB_REDIRECT_URI =
-  import.meta.env.VITE_GITHUB_REDIRECT_URI ||
-  "http://localhost:3000/login/callback";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   const login = () => {
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${GITHUB_REDIRECT_URI}&scope=user`;
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=user`;
     window.location.href = githubAuthUrl;
   };
 

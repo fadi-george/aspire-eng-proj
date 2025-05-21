@@ -21,6 +21,11 @@ You can generate a jwt secret like so: `openssl rand -hex 32`
 
 Now run `bun run db:generate` to create migration files and `bun run db:migrate` to perform the migration and setup the tables.
 
+### Frontend / App
+
+Create an `.env` and set the proper fields as indicated by `.env.example`.
+The client id should be same as the one in the server env file.
+
 ## Running
 
 You could also open two terminal instances and run `bun run dev` for the `/app` and `/server` folders.

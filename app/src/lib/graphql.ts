@@ -1,7 +1,12 @@
 import { GraphQLClient } from "graphql-request";
 
 // Create a GraphQL client instance
-export const graphqlClient = new GraphQLClient("http://localhost:4000/graphql");
+export const graphqlClient = new GraphQLClient(
+  "http://localhost:4000/graphql",
+  {
+    credentials: "include",
+  },
+);
 
 // Define the Repository type
 export interface Repository {

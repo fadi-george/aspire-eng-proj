@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { getCookie, setCookie } from "hono/cookie";
+import { setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
+import { jwt as jwtHono } from "hono/jwt";
 import jwt from "jsonwebtoken";
 import { Octokit } from "octokit";
 import db from "./db";
@@ -13,6 +14,14 @@ interface JWTPayload {
 }
 
 const TOKEN_KEY = "authToken";
+
+const jwtMiddleware = jwtHono({
+  secret: process.env.JWT_SECRET!,
+  cookie: {
+    key: TOKEN_KEY,
+  },
+});
+
 const app = new Hono();
 
 app.use(
@@ -97,19 +106,12 @@ app.post("/api/auth/github", async (c) => {
   }
 });
 
-app.get("/api/auth/me", async (c) => {
+app.get("/api/auth/me", jwtMiddleware, async (c) => {
   try {
-    const authToken = getCookie(c, TOKEN_KEY);
-    if (!authToken) {
-      return c.json({ error: "No token provided" }, 401);
-    }
-
-    const decoded = jwt.verify(
-      authToken,
-      process.env.JWT_SECRET!
-    ) as JWTPayload;
+    const payload = c.get("jwtPayload") as JWTPayload;
+    console.log({ payload });
     const user = await db.query.users.findFirst({
-      where: eq(users.id, decoded.userId),
+      where: eq(users.id, payload.userId),
     });
 
     if (!user) {
@@ -134,7 +136,7 @@ app.post("/api/auth/logout", async (c) => {
 });
 
 // GraphQL endpoint
-app.all("/graphql", async (c) => {
+app.all("/graphql", jwtMiddleware, async (c) => {
   return yoga(c.req.raw);
 });
 
