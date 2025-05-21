@@ -109,7 +109,6 @@ app.post("/api/auth/github", async (c) => {
 app.get("/api/auth/me", jwtMiddleware, async (c) => {
   try {
     const payload = c.get("jwtPayload") as JWTPayload;
-    console.log({ payload });
     const user = await db.query.users.findFirst({
       where: eq(users.id, payload.userId),
     });
@@ -136,7 +135,7 @@ app.post("/api/auth/logout", async (c) => {
 });
 
 // GraphQL endpoint
-app.all("/graphql", jwtMiddleware, async (c) => {
+app.all("/graphql", async (c) => {
   return yoga(c.req.raw);
 });
 

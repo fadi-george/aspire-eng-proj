@@ -47,8 +47,8 @@ interface UntrackRepositoryResponse {
   untrackRepository: boolean;
 }
 
-interface TrackedRepositoriesResponse {
-  trackedRepositories: TrackedRepository[];
+interface GetTrackedRepositoriesResponse {
+  getTrackedRepositories: TrackedRepository[];
 }
 
 interface MarkRepositoryAsSeenResponse {
@@ -133,22 +133,19 @@ export const untrackRepository = async (name: string, owner: string) => {
 export const getTrackedRepositories = async () => {
   const query = `
     query {
-      trackedRepositories {
+      getTrackedRepositories {
         description
-        language
+        last_seen_at
         name
         owner
         published_at
-        seen
-        stars
         tag_name
-        url
       }
     }
   `;
   const response =
-    await graphqlClient.request<TrackedRepositoriesResponse>(query);
-  return response.trackedRepositories;
+    await graphqlClient.request<GetTrackedRepositoriesResponse>(query);
+  return response.getTrackedRepositories;
 };
 
 export const markRepositoryAsSeen = async (name: string, owner: string) => {
