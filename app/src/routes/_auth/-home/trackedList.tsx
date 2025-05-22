@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, hasNewRelease } from "@/lib/general";
 import {
   getTrackedRepositories,
+  refreshRepositories,
   untrackRepository,
   type TrackedRepository,
 } from "@/lib/graphql";
@@ -29,7 +30,6 @@ export const RepositoryList = () => {
     data: repositories,
     isFetched,
     isLoading,
-    isFetching,
     refetch,
   } = useQuery({
     queryKey: ["trackedRepositories"],
@@ -56,6 +56,16 @@ export const RepositoryList = () => {
     },
   });
 
+  const { mutate: refresh, isPending: isRefreshing } = useMutation({
+    mutationFn: refreshRepositories,
+    onSuccess: () => {
+      refetch();
+    },
+    onError: () => {
+      toast.error("Failed to get latest updates");
+    },
+  });
+
   const [deleteRepoInfo, setDeleteRepoInfo] = useState<{
     name: string;
     owner: string;
@@ -68,7 +78,7 @@ export const RepositoryList = () => {
         <span className="flex items-center gap-2 justify-between pb-2 [view-transition-name:repo-section-header]">
           <h2>Tracked Repositories</h2>
           {isFetched && (
-            <RefreshButton isFetching={isFetching} onRefresh={refetch} />
+            <RefreshButton isFetching={isRefreshing} onRefresh={refresh} />
           )}
         </span>
         <hr />

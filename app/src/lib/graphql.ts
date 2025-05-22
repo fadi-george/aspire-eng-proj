@@ -10,7 +10,7 @@ export const graphqlClient = new GraphQLClient(
 
 // Define the Repository type
 export interface Repository {
-  id: string;
+  id: number;
   name: string;
   description: string | null;
   url: string;
@@ -34,10 +34,6 @@ export interface TrackedRepositoryRelease extends TrackedRepository {
 }
 
 // Define response types
-interface HelloResponse {
-  hello: string;
-}
-
 interface SearchRepositoriesResponse {
   searchRepositories: Repository[];
 }
@@ -62,16 +58,9 @@ interface GetTrackedRepositoryResponse {
   getTrackedRepository: TrackedRepositoryRelease | null;
 }
 
-// Example query to get the hello message
-export const getHello = async () => {
-  const query = `
-    query {
-      hello
-    }
-  `;
-  const response = await graphqlClient.request<HelloResponse>(query);
-  return response.hello;
-};
+interface RefreshRepositoriesResponse {
+  refreshRepositories: boolean;
+}
 
 // Example query to search repositories
 export const searchRepositories = async (query: string, limit: number = 10) => {
@@ -95,10 +84,10 @@ export const searchRepositories = async (query: string, limit: number = 10) => {
 };
 
 // Mutation to track a repository
-export const trackRepository = async (name: string, owner: string) => {
+export const trackRepository = async (id: number) => {
   const mutation = `
-    mutation TrackRepository($name: String!, $owner: String!) {
-      trackRepository(name: $name, owner: $owner) {
+    mutation TrackRepository($id: Int!) {
+      trackRepository(id: $id) {
         id
         description
         last_seen_at
@@ -111,7 +100,7 @@ export const trackRepository = async (name: string, owner: string) => {
   `;
   const response = await graphqlClient.request<TrackRepositoryResponse>(
     mutation,
-    { name, owner },
+    { id },
   );
   return response.trackRepository;
 };
@@ -185,4 +174,15 @@ export const getTrackedRepository = async (owner: string, name: string) => {
     { owner, name },
   );
   return response.getTrackedRepository;
+};
+
+export const refreshRepositories = async () => {
+  const mutation = `
+    mutation RefreshRepositories {
+      refreshRepositories
+    }
+  `;
+  const response =
+    await graphqlClient.request<RefreshRepositoriesResponse>(mutation);
+  return response.refreshRepositories;
 };

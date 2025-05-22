@@ -1,14 +1,13 @@
+import { Octokit } from "@octokit/rest";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 import { jwt as jwtHono } from "hono/jwt";
 import jwt from "jsonwebtoken";
-import { Octokit } from "octokit";
 import db from "./db";
 import { users } from "./db/schema";
 import { yoga } from "./graphql";
-
 interface JWTPayload {
   userId: number;
 }

@@ -30,16 +30,10 @@ export const Search = () => {
     queryFn: () => searchRepositories(debouncedSearch, 5),
     enabled: !!debouncedSearch,
   });
+  console.log("hmm", { repositories });
 
   const { mutateAsync: trackRepo, isPending } = useMutation({
-    mutationFn: ({
-      name,
-      owner,
-    }: {
-      id: string;
-      name: string;
-      owner: string;
-    }) => trackRepository(name, owner),
+    mutationFn: ({ id }: { id: number }) => trackRepository(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trackedRepositories"] });
       toast.success("Repository tracked successfully!");
@@ -49,20 +43,18 @@ export const Search = () => {
     },
   });
 
-  const handleTrackRepository = ({ id, name, owner }: Repository) => {
+  const handleTrackRepository = ({ id }: Repository) => {
     const trackedRepos = queryClient.getQueryData<TrackedRepository[]>([
       "trackedRepositories",
     ]);
 
-    if (
-      trackedRepos?.some((repo) => repo.owner === owner && repo.name === name)
-    ) {
+    if (trackedRepos?.some((repo) => repo.id === id)) {
       toast.error("Repository already tracked.");
       return;
     }
 
     setSearch("");
-    trackRepo({ id, name, owner });
+    trackRepo({ id });
   };
 
   return (
@@ -88,31 +80,34 @@ export const Search = () => {
             )}
             {isLoadingRepos && <CommandEmpty>Loading...</CommandEmpty>}
             <CommandGroup>
-              {repositories.map((repository) => (
-                <CommandItem
-                  disabled={isPending}
-                  className="cursor-pointer"
-                  key={repository.url}
-                  value={repository.url}
-                  onSelect={() => handleTrackRepository(repository)}
-                >
-                  <div className="flex items-center gap-2 justify-between w-full">
-                    <div className="flex flex-col overflow-hidden flex-1 ">
-                      <p className="text-sm font-medium">
-                        {repository.owner}/{repository.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground overflow-ellipsis whitespace-nowrap block overflow-hidden">
-                        {repository.description}
-                      </p>
+              {repositories.map((repository) => {
+                const key = `${repository.id}`;
+                return (
+                  <CommandItem
+                    disabled={isPending}
+                    className="cursor-pointer"
+                    key={key}
+                    value={key}
+                    onSelect={() => handleTrackRepository(repository)}
+                  >
+                    <div className="flex items-center gap-2 justify-between w-full">
+                      <div className="flex flex-col overflow-hidden flex-1 ">
+                        <p className="text-sm font-medium">
+                          {repository.owner}/{repository.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground overflow-ellipsis whitespace-nowrap block overflow-hidden">
+                          {repository.description}
+                        </p>
+                      </div>
+                      <div className="ml-auto flex items-center gap-2 text-nowrap overflow-hidden">
+                        <p className="text-sm text-muted-foreground">
+                          {formatNumber(repository.stars, 1)} ★
+                        </p>
+                      </div>
                     </div>
-                    <div className="ml-auto flex items-center gap-2 text-nowrap overflow-hidden">
-                      <p className="text-sm text-muted-foreground">
-                        {formatNumber(repository.stars, 1)} ★
-                      </p>
-                    </div>
-                  </div>
-                </CommandItem>
-              ))}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>{" "}
           </CommandList>
         )}

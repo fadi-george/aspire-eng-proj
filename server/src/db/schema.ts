@@ -29,7 +29,7 @@ export const repositories = pgTable(
   "repositories",
   {
     id: serial("id").primaryKey(),
-    repoId: bigint("repo_id", { mode: "number" }).notNull().unique(),
+    repoId: bigint("repo_id", { mode: "bigint" }).notNull().unique(),
     name: text("name").notNull(),
     owner: text("owner").notNull(),
     description: text("description"),
@@ -52,7 +52,7 @@ export const trackedRepositories = pgTable(
       .references(() => users.id, {
         onDelete: "cascade",
       }),
-    repoId: bigint("repo_id", { mode: "number" })
+    repoId: bigint("repo_id", { mode: "bigint" })
       .notNull()
       .references(() => repositories.repoId, {
         onDelete: "cascade",
