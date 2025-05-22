@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/lib/general";
+import { formatDate, hasNewRelease } from "@/lib/general";
 import {
   getTrackedRepositories,
   untrackRepository,
@@ -156,7 +156,8 @@ const RepositoryCard = ({
 }) => {
   const navigate = useNavigate({ from: "/" });
 
-  const { owner, name, published_at, seen, tag_name } = repository;
+  const { owner, name, published_at, release_tag, last_seen_at } = repository;
+  const isNewRelease = hasNewRelease(last_seen_at, published_at);
   return (
     <Card
       key={name}
@@ -168,7 +169,7 @@ const RepositoryCard = ({
       <CardHeader className="gap-0">
         <CardTitle className="flex items-center gap-2">
           <span className="flex-1">{name}</span>
-          {!seen && <MarkSeenButton name={name} owner={owner} />}
+          {isNewRelease && <MarkSeenButton name={name} owner={owner} />}
           <Button
             variant="ghost"
             size="icon"
@@ -183,12 +184,12 @@ const RepositoryCard = ({
       </CardHeader>
       <CardContent>
         <CardDescription>
-          {tag_name && (
+          {isNewRelease && (
             <div className="flex items-center gap-4 mt-2 [&>span]:flex [&>span]:items-center [&>span]:gap-1 [&>span>svg]:size-5">
               <span>
                 <Package />
-                {repository.tag_name}
-                {!seen && (
+                {release_tag}
+                {isNewRelease && (
                   <Badge className="border-yellow-500 bg-yellow-100 text-yellow-800 rounded-lg leading-[1.25] ">
                     New
                   </Badge>

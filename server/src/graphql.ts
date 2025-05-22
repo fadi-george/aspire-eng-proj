@@ -19,12 +19,6 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_PAT,
 });
 
-const _trackedRepositories: {
-  name: string;
-  owner: string;
-  seen: boolean;
-}[] = [];
-
 async function fetchRepositoryInfo(name: string, owner: string) {
   try {
     const repoInfo = await octokit.rest.repos.get({
@@ -32,26 +26,43 @@ async function fetchRepositoryInfo(name: string, owner: string) {
       repo: name,
     });
 
-    let releaseInfo = { data: { tag_name: null, published_at: null } };
+    let releaseInfo = {
+      data: { body: null, tag_name: null, published_at: null },
+    };
+    let commit: string | null = null;
     try {
       releaseInfo = await octokit.rest.repos.getLatestRelease({
         owner,
         repo: name,
       });
-    } catch (error) {
-      console.info("No releases found for repository");
+
+      if (releaseInfo.data.tag_name) {
+        commit = (
+          await octokit.rest.git.getRef({
+            owner,
+            repo: name,
+            ref: `tags/${releaseInfo.data.tag_name}`,
+          })
+        ).data.object.sha;
+      }
+    } catch (error: any) {
+      let status = error?.status;
+
+      // not all repos have releases
+      if (status !== 404) {
+        throw error;
+      }
     }
 
     return {
       name,
       owner,
       id: repoInfo.data.id,
-      url: repoInfo.data.html_url,
-      stars: repoInfo.data.stargazers_count,
-      language: repoInfo.data.language,
       description: repoInfo.data.description,
-      tag_name: releaseInfo.data.tag_name,
+      releaseTag: releaseInfo.data.tag_name,
       published_at: releaseInfo.data.published_at,
+      releaseNotes: releaseInfo.data.body,
+      releaseCommit: commit,
     };
   } catch (error: any) {
     throw new Error(`Failed to fetch repository: ${error.message}`);
@@ -62,7 +73,6 @@ interface GitHubRepository {
   id: number;
   description: string | null;
   html_url: string;
-  language: string | null;
   name: string;
   owner: {
     login: string;
@@ -89,12 +99,13 @@ export const yoga = createYoga<Context>({
       }
 
       type TrackedRepository {
-        description: String
-        last_seen_at: String
+        id: Int!
         name: String!
         owner: String!
+        description: String
+        last_seen_at: String
         published_at: String
-        tag_name: String
+        release_tag: String
       }
 
       type TrackedRepositoryRelease {
@@ -140,25 +151,29 @@ export const yoga = createYoga<Context>({
             id: repo.id,
             name: repo.name,
             description: repo.description,
-            url: repo.html_url,
             stars: repo.stargazers_count,
-            language: repo.language,
             owner: repo.owner.login,
           }));
         },
         getTrackedRepositories: async (_, __, ctx) => {
           const userId = ctx.userId;
 
-          const trackedRepos = await db
-            .select()
-            .from(trackedRepositories)
-            .leftJoin(
-              repositories,
-              eq(trackedRepositories.repoId, repositories.repoId)
-            )
-            .where(eq(trackedRepositories.userId, userId));
-          console.log("uhh", trackedRepos);
-          return [];
+          const trackedRepos = await db.query.trackedRepositories.findMany({
+            where: eq(trackedRepositories.userId, userId),
+            with: {
+              repository: true,
+            },
+          });
+
+          return trackedRepos.map((trackedRepo) => ({
+            id: trackedRepo.id,
+            name: trackedRepo.repository.name,
+            description: trackedRepo.repository.description,
+            owner: trackedRepo.repository.owner,
+            published_at: trackedRepo.repository.publishedAt?.toISOString(),
+            release_tag: trackedRepo.repository.releaseTag,
+            last_seen_at: trackedRepo.lastSeenAt?.toISOString(),
+          }));
         },
         getTrackedRepository: async (_, { name, owner }) => {
           // const repo = trackedRepositories.find(
@@ -202,9 +217,9 @@ export const yoga = createYoga<Context>({
               eq(repositories.owner, owner)
             ),
           });
-          console.log("repo", repo);
           if (!repo) {
             const repoInfo = await fetchRepositoryInfo(name, owner);
+
             repo = (
               await db
                 .insert(repositories)
@@ -213,8 +228,12 @@ export const yoga = createYoga<Context>({
                   name,
                   owner,
                   description: repoInfo.description,
-                  publishedAt: repoInfo.published_at,
-                  tagName: repoInfo.tag_name,
+                  publishedAt: repoInfo.published_at
+                    ? new Date(repoInfo.published_at)
+                    : null,
+                  releaseTag: repoInfo.tag_name,
+                  releaseCommit: repoInfo.commit,
+                  releaseNotes: repoInfo.notes,
                 })
                 .returning()
             )[0];
@@ -246,34 +265,63 @@ export const yoga = createYoga<Context>({
             last_seen_at: null,
           };
         },
-        untrackRepository: async (_, { name, owner }) => {
-          // const index = trackedRepositories.findIndex(
-          //   (repo) => repo.name === name && repo.owner === owner
-          // );
+        untrackRepository: async (_, { name, owner }, ctx) => {
+          const userId = ctx.userId;
 
-          // if (index === -1) {
-          //   throw new Error("Repository not found in tracked list");
-          // }
+          const repo = await db.query.repositories.findFirst({
+            where: and(
+              eq(repositories.name, name),
+              eq(repositories.owner, owner)
+            ),
+          });
+          if (!repo) {
+            throw new Error("Repository not found");
+          }
 
-          // trackedRepositories.splice(index, 1);
-          return true;
+          try {
+            await db
+              .delete(trackedRepositories)
+              .where(
+                and(
+                  eq(trackedRepositories.userId, userId),
+                  eq(trackedRepositories.repoId, repo.repoId)
+                )
+              );
+            return true;
+          } catch (error) {
+            console.error(error);
+            return false;
+          }
         },
-        markRepositoryAsSeen: async (_, { name, owner }) => {
-          // const index = trackedRepositories.findIndex(
-          //   (repo) => repo.name === name && repo.owner === owner
-          // );
-          // if (index === -1) {
-          //   throw new Error("Repository not found in tracked list");
-          // }
+        markRepositoryAsSeen: async (_, { name, owner }, ctx) => {
+          const userId = ctx.userId;
+          const repo = await db.query.repositories.findFirst({
+            where: and(
+              eq(repositories.name, name),
+              eq(repositories.owner, owner)
+            ),
+          });
+          if (!repo) {
+            throw new Error("Repository not found");
+          }
 
-          // trackedRepositories[index].seen = true;
+          await db
+            .update(trackedRepositories)
+            .set({ lastSeenAt: new Date() })
+            .where(
+              and(
+                eq(trackedRepositories.userId, userId),
+                eq(trackedRepositories.repoId, repo.repoId)
+              )
+            );
+
           return true;
         },
       },
     },
   }),
   plugins: [
-    // verify jwt cookie
+    // parse and verify jwt cookie
     useCookies(),
     useJWT({
       signingKeyProviders: [

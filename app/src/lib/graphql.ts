@@ -15,14 +15,17 @@ export interface Repository {
   description: string | null;
   url: string;
   stars: number;
-  language: string | null;
   owner: string;
 }
 
-export interface TrackedRepository extends Omit<Repository, "id"> {
-  seen: boolean;
-  tag_name: string | null;
+export interface TrackedRepository {
+  id: number;
+  name: string;
+  description: string | null;
+  owner: string;
   published_at: string | null;
+  release_tag: string | null;
+  last_seen_at: string | null;
 }
 
 export interface TrackedRepositoryRelease extends TrackedRepository {
@@ -78,7 +81,6 @@ export const searchRepositories = async (query: string, limit: number = 10) => {
         id
         name
         description
-        url
         stars
         language
         owner
@@ -97,15 +99,13 @@ export const trackRepository = async (name: string, owner: string) => {
   const mutation = `
     mutation TrackRepository($name: String!, $owner: String!) {
       trackRepository(name: $name, owner: $owner) {
+        id
         description
-        language
+        last_seen_at
         name
         owner
         published_at
-        seen
-        stars
-        tag_name
-        url
+        release_tag
       }
     }
   `;
@@ -134,12 +134,13 @@ export const getTrackedRepositories = async () => {
   const query = `
     query {
       getTrackedRepositories {
+        id
         description
         last_seen_at
         name
         owner
         published_at
-        tag_name
+        release_tag
       }
     }
   `;

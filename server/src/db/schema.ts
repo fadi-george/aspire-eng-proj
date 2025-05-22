@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   bigint,
   index,
@@ -33,7 +34,9 @@ export const repositories = pgTable(
     owner: text("owner").notNull(),
     description: text("description"),
     publishedAt: timestamp("published_at"),
-    tagName: text("tag_name"),
+    releaseTag: text("release_tag"),
+    releaseCommit: text("release_commit"),
+    releaseNotes: text("release_notes"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
@@ -51,10 +54,27 @@ export const trackedRepositories = pgTable(
       }),
     repoId: bigint("repo_id", { mode: "number" })
       .notNull()
-      .references(() => repositories.repoId),
-    lastSeenTag: text("last_seen_tag"),
+      .references(() => repositories.repoId, {
+        onDelete: "cascade",
+      }),
+    lastSeenAt: timestamp("last_seen_at"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
   (table) => [unique("unique_user_repo").on(table.userId, table.repoId)]
+);
+
+// relations
+export const repositoriesRelations = relations(repositories, ({ many }) => ({
+  trackedBy: many(trackedRepositories),
+}));
+
+export const trackedRepositoriesRelations = relations(
+  trackedRepositories,
+  ({ one }) => ({
+    repository: one(repositories, {
+      fields: [trackedRepositories.repoId],
+      references: [repositories.repoId],
+    }),
+  })
 );
