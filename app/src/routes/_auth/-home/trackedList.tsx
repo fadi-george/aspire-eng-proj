@@ -173,7 +173,10 @@ const RepositoryCard = ({
       key={name}
       className="gap-1 cursor-pointer"
       onClick={() => {
-        navigate({ to: `/repo/${owner}/${name}` });
+        navigate({
+          to: `/repo/${owner}/${name}`,
+          state: { repoId, last_seen_at, published_at },
+        });
       }}
       style={{
         viewTransitionName: `card-${owner}-${name}`,

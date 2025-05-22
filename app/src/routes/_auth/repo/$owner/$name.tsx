@@ -13,6 +13,7 @@ import {
   Navigate,
   useNavigate,
   useParams,
+  useRouterState,
 } from "@tanstack/react-router";
 import dompurify from "dompurify";
 import { ArrowLeft, GitCommitVertical } from "lucide-react";
@@ -28,6 +29,8 @@ function RouteComponent() {
   const { owner, name } = useParams({
     from: "/_auth/repo/$owner/$name",
   });
+  const routerState = useRouterState();
+  const state = routerState.location.state;
   const [parsedNotes, setParsedNotes] = useState<string>("");
 
   const {
@@ -69,9 +72,9 @@ function RouteComponent() {
     release_commit,
   } = repository ?? {
     description: " ",
-    repoId: "",
-    last_seen_at: null,
-    published_at: null,
+    repoId: state.repoId ?? "",
+    last_seen_at: state.last_seen_at ?? null,
+    published_at: state.published_at ?? null,
     release_tag: "",
     release_commit: "",
   };
@@ -82,9 +85,9 @@ function RouteComponent() {
     <div className="pb-10">
       <div className="[view-transition-name:repo-section-header] sticky top-0 bg-slate-50 z-1 pt-[10px] mt-[-10px]">
         <div className="flex items-center justify-between gap-2 pb-2 ">
+          {/* Back button */}
           <span className="flex items-center gap-2">
             <Button
-              // className="w-fit h-fit"
               variant="ghost"
               size="icon"
               onClick={() => navigate({ to: "/" })}
@@ -99,6 +102,7 @@ function RouteComponent() {
             </h1>
           </span>
 
+          {/* Mark as seen and refresh latest button */}
           <span className="flex items-center gap-2">
             {isNewRelease && <MarkSeenButton repoId={repoId} />}
             <RefreshButton isFetching={isFetching} onRefresh={refetch} />
@@ -130,6 +134,7 @@ function RouteComponent() {
                 </>
               ) : (
                 <>
+                  {/* Release metadata */}
                   {release_commit && (
                     <span className="flex items-center gap-1">
                       <GitCommitVertical /> {release_commit.slice(0, 7)}
@@ -147,6 +152,7 @@ function RouteComponent() {
         </CardHeader>
         <hr />
         <CardContent>
+          {/* Release notes */}
           {isLoading ? (
             <div className="flex flex-col gap-5">
               <Skeleton className="w-1/4 h-[20px]" />

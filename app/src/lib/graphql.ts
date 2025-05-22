@@ -160,6 +160,8 @@ export const getTrackedRepository = async (owner: string, name: string) => {
   const query = `
     query GetTrackedRepository($owner: String!, $name: String!) {
       getTrackedRepository(owner: $owner, name: $name) {
+        id
+        repoId
         description
         name
         owner
