@@ -10,16 +10,16 @@ export const graphqlClient = new GraphQLClient(
 
 // Define the Repository type
 export interface Repository {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
-  url: string;
   stars: number;
   owner: string;
 }
 
 export interface TrackedRepository {
   id: number;
+  repoId: string;
   name: string;
   description: string | null;
   owner: string;
@@ -51,7 +51,9 @@ interface GetTrackedRepositoriesResponse {
 }
 
 interface MarkRepositoryAsSeenResponse {
-  markRepositoryAsSeen: boolean;
+  markRepositoryAsSeen: {
+    lastSeenAt: string;
+  };
 }
 
 interface GetTrackedRepositoryResponse {
@@ -71,7 +73,6 @@ export const searchRepositories = async (query: string, limit: number = 10) => {
         name
         description
         stars
-        language
         owner
       }
     }
@@ -84,11 +85,12 @@ export const searchRepositories = async (query: string, limit: number = 10) => {
 };
 
 // Mutation to track a repository
-export const trackRepository = async (id: number) => {
+export const trackRepository = async (repoId: string) => {
   const mutation = `
-    mutation TrackRepository($id: Int!) {
-      trackRepository(id: $id) {
+    mutation TrackRepository($repoId: String!) {
+      trackRepository(repoId: $repoId) {
         id
+        repoId
         description
         last_seen_at
         name
@@ -100,21 +102,21 @@ export const trackRepository = async (id: number) => {
   `;
   const response = await graphqlClient.request<TrackRepositoryResponse>(
     mutation,
-    { id },
+    { repoId },
   );
   return response.trackRepository;
 };
 
 // Mutation to untrack a repository
-export const untrackRepository = async (name: string, owner: string) => {
+export const untrackRepository = async (repoId: string) => {
   const mutation = `
-    mutation UntrackRepository($name: String!, $owner: String!) {
-      untrackRepository(name: $name, owner: $owner)
+    mutation UntrackRepository($repoId: String!) {
+      untrackRepository(repoId: $repoId)
     }
   `;
   const response = await graphqlClient.request<UntrackRepositoryResponse>(
     mutation,
-    { name, owner },
+    { repoId },
   );
   return response.untrackRepository;
 };
@@ -124,6 +126,7 @@ export const getTrackedRepositories = async () => {
     query {
       getTrackedRepositories {
         id
+        repoId
         description
         last_seen_at
         name
@@ -138,40 +141,38 @@ export const getTrackedRepositories = async () => {
   return response.getTrackedRepositories;
 };
 
-export const markRepositoryAsSeen = async (name: string, owner: string) => {
+export const markRepositoryAsSeen = async (repoId: string) => {
   const mutation = `
-    mutation MarkRepositoryAsSeen($name: String!, $owner: String!) {
-      markRepositoryAsSeen(name: $name, owner: $owner)
+    mutation MarkRepositoryAsSeen($repoId: String!) {
+      markRepositoryAsSeen(repoId: $repoId) {
+        lastSeenAt
+      }
     }
   `;
   const response = await graphqlClient.request<MarkRepositoryAsSeenResponse>(
     mutation,
-    { name, owner },
+    { repoId },
   );
   return response.markRepositoryAsSeen;
 };
 
-export const getTrackedRepository = async (owner: string, name: string) => {
+export const getTrackedRepository = async (repoId: string) => {
   const query = `
-    query GetTrackedRepository($owner: String!, $name: String!) {
-      getTrackedRepository(owner: $owner, name: $name) {
-        body
-        commit
+    query GetTrackedRepository($repoId: String!) {
+      getTrackedRepository(repoId: $repoId) {
         description
-        language
         name
         owner
         published_at
-        seen
-        stars
-        tag_name
-        url
+        release_tag
+        release_commit
+        release_notes
       }
     }
   `;
   const response = await graphqlClient.request<GetTrackedRepositoryResponse>(
     query,
-    { owner, name },
+    { repoId },
   );
   return response.getTrackedRepository;
 };

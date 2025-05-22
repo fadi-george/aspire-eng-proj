@@ -30,10 +30,9 @@ export const Search = () => {
     queryFn: () => searchRepositories(debouncedSearch, 5),
     enabled: !!debouncedSearch,
   });
-  console.log("hmm", { repositories });
 
   const { mutateAsync: trackRepo, isPending } = useMutation({
-    mutationFn: ({ id }: { id: number }) => trackRepository(id),
+    mutationFn: ({ id }: { id: string }) => trackRepository(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trackedRepositories"] });
       toast.success("Repository tracked successfully!");
@@ -48,7 +47,7 @@ export const Search = () => {
       "trackedRepositories",
     ]);
 
-    if (trackedRepos?.some((repo) => repo.id === id)) {
+    if (trackedRepos?.some((repo) => repo.repoId === id)) {
       toast.error("Repository already tracked.");
       return;
     }
@@ -81,19 +80,19 @@ export const Search = () => {
             {isLoadingRepos && <CommandEmpty>Loading...</CommandEmpty>}
             <CommandGroup>
               {repositories.map((repository) => {
-                const key = `${repository.id}`;
+                const { owner, name } = repository;
                 return (
                   <CommandItem
                     disabled={isPending}
                     className="cursor-pointer"
-                    key={key}
-                    value={key}
+                    key={repository.id}
+                    value={`${owner}/${name}`}
                     onSelect={() => handleTrackRepository(repository)}
                   >
                     <div className="flex items-center gap-2 justify-between w-full">
                       <div className="flex flex-col overflow-hidden flex-1 ">
                         <p className="text-sm font-medium">
-                          {repository.owner}/{repository.name}
+                          {owner}/{name}
                         </p>
                         <p className="text-sm text-muted-foreground overflow-ellipsis whitespace-nowrap block overflow-hidden">
                           {repository.description}

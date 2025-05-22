@@ -43,8 +43,9 @@ function RouteComponent() {
     return <Navigate to="/" />;
   }
 
-  const { description } = repository ?? {
+  const { description, repoId } = repository ?? {
     description: " ",
+    repoId: "",
   };
   return (
     <div>
@@ -65,7 +66,7 @@ function RouteComponent() {
         </span>
 
         <span className="flex items-center gap-2">
-          <MarkSeenButton name={name} owner={owner} />
+          <MarkSeenButton repoId={repoId} />
           <RefreshButton isFetching={isFetching} onRefresh={refetch} />
         </span>
       </div>

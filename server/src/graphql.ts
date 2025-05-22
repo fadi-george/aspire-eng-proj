@@ -91,14 +91,13 @@ export const yoga = createYoga<Context>({
         id: String!
         name: String!
         description: String
-        url: String!
         stars: Int!
-        language: String
         owner: String!
       }
 
       type TrackedRepository {
-        id: String!
+        id: Int!
+        repoId: String!
         name: String!
         owner: String!
         description: String
@@ -121,19 +120,20 @@ export const yoga = createYoga<Context>({
         url: String!
       }
 
+      type MarkRepositoryAsSeenResponse {
+        lastSeenAt: String!
+      }
+
       type Query {
         searchRepositories(query: String!, limit: Int = 10): [Repository!]!
         getTrackedRepositories: [TrackedRepository!]!
-        getTrackedRepository(
-          name: String!
-          owner: String!
-        ): TrackedRepositoryRelease
+        getTrackedRepository(repoId: String!): TrackedRepositoryRelease
       }
 
       type Mutation {
-        trackRepository(id: String!): TrackedRepository!
-        untrackRepository(name: String!, owner: String!): Boolean!
-        markRepositoryAsSeen(name: String!, owner: String!): Boolean!
+        trackRepository(repoId: String!): TrackedRepository!
+        untrackRepository(repoId: String!): Boolean!
+        markRepositoryAsSeen(repoId: String!): MarkRepositoryAsSeenResponse!
         refreshRepositories: Boolean!
       }
     `,
@@ -146,7 +146,6 @@ export const yoga = createYoga<Context>({
             sort: "stars",
             order: "desc",
           });
-          console.log(response.data.items);
 
           return response.data.items.map((repo) => ({
             id: repo.id.toString(),
@@ -168,6 +167,7 @@ export const yoga = createYoga<Context>({
 
           return trackedRepos.map((trackedRepo) => ({
             id: trackedRepo.id,
+            repoId: trackedRepo.repository.repoId.toString(),
             name: trackedRepo.repository.name,
             description: trackedRepo.repository.description,
             owner: trackedRepo.repository.owner,
@@ -206,7 +206,7 @@ export const yoga = createYoga<Context>({
         },
       },
       Mutation: {
-        trackRepository: async (_, { id }: { id: string }, ctx) => {
+        trackRepository: async (_, { repoId: id }: { repoId: string }, ctx) => {
           const userId = ctx.userId;
           const repoId = BigInt(id);
 
@@ -256,6 +256,7 @@ export const yoga = createYoga<Context>({
 
           return {
             id: trackedRepo[0]!.id,
+            repoId: repo.repoId.toString(),
             name: repo.name,
             owner: repo.owner,
             description: repo.description,
@@ -264,14 +265,11 @@ export const yoga = createYoga<Context>({
             last_seen_at: null,
           };
         },
-        untrackRepository: async (_, { name, owner }, ctx) => {
+        untrackRepository: async (_, { repoId }, ctx) => {
           const userId = ctx.userId;
 
           const repo = await db.query.repositories.findFirst({
-            where: and(
-              eq(repositories.name, name),
-              eq(repositories.owner, owner)
-            ),
+            where: eq(repositories.repoId, BigInt(repoId)),
           });
           if (!repo) {
             throw new Error("Repository not found");
@@ -292,21 +290,20 @@ export const yoga = createYoga<Context>({
             return false;
           }
         },
-        markRepositoryAsSeen: async (_, { name, owner }, ctx) => {
+        markRepositoryAsSeen: async (_, { repoId }, ctx) => {
           const userId = ctx.userId;
+
           const repo = await db.query.repositories.findFirst({
-            where: and(
-              eq(repositories.name, name),
-              eq(repositories.owner, owner)
-            ),
+            where: eq(repositories.repoId, BigInt(repoId)),
           });
           if (!repo) {
             throw new Error("Repository not found");
           }
 
+          const newDate = new Date();
           await db
             .update(trackedRepositories)
-            .set({ lastSeenAt: new Date() })
+            .set({ lastSeenAt: newDate })
             .where(
               and(
                 eq(trackedRepositories.userId, userId),
@@ -314,7 +311,7 @@ export const yoga = createYoga<Context>({
               )
             );
 
-          return true;
+          return { lastSeenAt: newDate.toISOString() };
         },
         refreshRepositories: async (_, __, ctx) => {
           const userId = ctx.userId;
@@ -325,7 +322,6 @@ export const yoga = createYoga<Context>({
               repository: true,
             },
           });
-          console.log(trackedRepos);
 
           let promises = [];
           for (const repo of trackedRepos) {

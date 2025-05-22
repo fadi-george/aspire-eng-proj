@@ -37,18 +37,15 @@ export const RepositoryList = () => {
   });
 
   const { mutate: untrackRepo, isPending: isRemovingRepo } = useMutation({
-    mutationFn: ({ name, owner }: { name: string; owner: string }) =>
-      untrackRepository(name, owner),
-    onSuccess: (_, { name, owner }) => {
+    mutationFn: ({ repoId }: { repoId: string }) => untrackRepository(repoId),
+    onSuccess: (_, { repoId }) => {
       queryClient.setQueriesData<TrackedRepository[]>(
         {
           queryKey: ["trackedRepositories"],
         },
         (data) => {
           if (!data) return [];
-          return data.filter(
-            (repo) => repo.name !== name && repo.owner !== owner,
-          );
+          return data.filter((repo) => repo.repoId !== repoId);
         },
       );
       setDeleteRepoInfo(null);
@@ -69,6 +66,7 @@ export const RepositoryList = () => {
   const [deleteRepoInfo, setDeleteRepoInfo] = useState<{
     name: string;
     owner: string;
+    repoId: string;
   } | null>(null);
 
   return (
@@ -94,7 +92,7 @@ export const RepositoryList = () => {
           ) : (
             <>
               {repositories?.map((repository) => {
-                const { name, owner } = repository;
+                const { name, owner, repoId } = repository;
                 return (
                   <RepositoryCard
                     key={name}
@@ -103,6 +101,7 @@ export const RepositoryList = () => {
                       setDeleteRepoInfo({
                         name: name,
                         owner: owner,
+                        repoId: repoId,
                       })
                     }
                   />
@@ -166,7 +165,8 @@ const RepositoryCard = ({
 }) => {
   const navigate = useNavigate({ from: "/" });
 
-  const { owner, name, published_at, release_tag, last_seen_at } = repository;
+  const { owner, name, published_at, release_tag, last_seen_at, repoId } =
+    repository;
   const isNewRelease = hasNewRelease(last_seen_at, published_at);
   return (
     <Card
@@ -179,7 +179,7 @@ const RepositoryCard = ({
       <CardHeader className="gap-0">
         <CardTitle className="flex items-center gap-2">
           <span className="flex-1">{name}</span>
-          {isNewRelease && <MarkSeenButton name={name} owner={owner} />}
+          {isNewRelease && <MarkSeenButton repoId={repoId} />}
           <Button
             variant="ghost"
             size="icon"
@@ -194,7 +194,7 @@ const RepositoryCard = ({
       </CardHeader>
       <CardContent>
         <CardDescription>
-          {isNewRelease && (
+          {release_tag && (
             <div className="flex items-center gap-4 mt-2 [&>span]:flex [&>span]:items-center [&>span]:gap-1 [&>span>svg]:size-5">
               <span>
                 <Package />
