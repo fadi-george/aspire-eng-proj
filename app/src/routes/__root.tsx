@@ -17,7 +17,7 @@ function Root() {
       <header className="px-12 max-w-7xl m-auto pt-3">
         {user ? <Button onClick={logout}>Logout</Button> : null}
       </header>
-      <main className="h-screen p-12 pt-8 max-w-7xl m-auto">
+      <main className="h-screen p-12 pt-8 max-w-7xl m-auto ">
         <Outlet />
         {/* <TanStackRouterDevtools /> */}
       </main>

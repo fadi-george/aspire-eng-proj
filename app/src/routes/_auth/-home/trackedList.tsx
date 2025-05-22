@@ -1,7 +1,7 @@
 import { ConfirmDialog } from "@/components/confirmDialog";
 import { MarkSeenButton } from "@/components/markSeenButton";
+import { PackageTag } from "@/components/packageTag";
 import { RefreshButton } from "@/components/refreshButton";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate, hasNewRelease } from "@/lib/general";
+import { hasNewRelease } from "@/lib/general";
 import {
   getTrackedRepositories,
   refreshRepositories,
@@ -20,7 +20,7 @@ import {
 } from "@/lib/graphql";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Calendar, Package, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -167,13 +167,16 @@ const RepositoryCard = ({
 
   const { owner, name, published_at, release_tag, last_seen_at, repoId } =
     repository;
-  const isNewRelease = hasNewRelease(last_seen_at, published_at);
+  const isNewRelease = hasNewRelease({ last_seen_at, published_at });
   return (
     <Card
       key={name}
       className="gap-1 cursor-pointer"
       onClick={() => {
         navigate({ to: `/repo/${owner}/${name}` });
+      }}
+      style={{
+        viewTransitionName: `card-${owner}-${name}`,
       }}
     >
       <CardHeader className="gap-0">
@@ -194,25 +197,13 @@ const RepositoryCard = ({
       </CardHeader>
       <CardContent>
         <CardDescription>
-          {release_tag && (
-            <div className="flex items-center gap-4 mt-2 [&>span]:flex [&>span]:items-center [&>span]:gap-1 [&>span>svg]:size-5">
-              <span>
-                <Package />
-                {release_tag}
-                {isNewRelease && (
-                  <Badge className="border-yellow-500 bg-yellow-100 text-yellow-800 rounded-lg leading-[1.25] ">
-                    New
-                  </Badge>
-                )}
-              </span>
-              {published_at && (
-                <span>
-                  <Calendar />
-                  {formatDate(published_at)}
-                </span>
-              )}
-            </div>
-          )}
+          <div className="mt-2">
+            <PackageTag
+              release_tag={release_tag}
+              published_at={published_at}
+              last_seen_at={last_seen_at}
+            />
+          </div>
           <div className="mt-3 line-clamp-2">{repository.description}</div>
         </CardDescription>
       </CardContent>

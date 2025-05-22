@@ -12,23 +12,14 @@ export const formatDate = (
   return Intl.DateTimeFormat(undefined, options).format(new Date(date));
 };
 
-export const isReleaseSeen = (
-  lastSeenAt: string | null,
-  publishedAt: string | null,
-) => {
-  if (!lastSeenAt || !publishedAt) {
-    return false;
-  }
-  const lastSeen = new Date(lastSeenAt);
-  const published = new Date(publishedAt);
-  return lastSeen.getTime() >= published.getTime();
-};
-
-export const hasNewRelease = (
-  lastSeenAt: string | null,
-  publishedAt: string | null,
-) => {
-  if (!publishedAt) return false;
-  if (!lastSeenAt) return true;
-  return Date.parse(publishedAt) > Date.parse(lastSeenAt);
+export const hasNewRelease = ({
+  last_seen_at,
+  published_at,
+}: {
+  last_seen_at: string | null;
+  published_at: string | null;
+}) => {
+  if (!published_at) return false;
+  if (!last_seen_at) return true;
+  return Date.parse(published_at) > Date.parse(last_seen_at);
 };

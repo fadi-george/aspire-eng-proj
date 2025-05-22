@@ -115,7 +115,13 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground bg-slate-50;
+  }
+  a {
+    @apply text-blue-500 font-medium;
+  }
+  hr {
+    @apply border-slate-300;
   }
   h1 {
     @apply text-3xl font-bold;

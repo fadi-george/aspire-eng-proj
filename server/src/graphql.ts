@@ -107,17 +107,16 @@ export const yoga = createYoga<Context>({
       }
 
       type TrackedRepositoryRelease {
-        body: String
-        commit: String
+        id: Int!
+        repoId: String!
         description: String
-        language: String
         name: String!
         owner: String!
+        last_seen_at: String
         published_at: String
-        seen: Boolean!
-        stars: Int!
-        tag_name: String
-        url: String!
+        release_tag: String
+        release_commit: String
+        release_notes: String
       }
 
       type MarkRepositoryAsSeenResponse {
@@ -127,7 +126,10 @@ export const yoga = createYoga<Context>({
       type Query {
         searchRepositories(query: String!, limit: Int = 10): [Repository!]!
         getTrackedRepositories: [TrackedRepository!]!
-        getTrackedRepository(repoId: String!): TrackedRepositoryRelease
+        getTrackedRepository(
+          owner: String!
+          name: String!
+        ): TrackedRepositoryRelease
       }
 
       type Mutation {
@@ -176,32 +178,40 @@ export const yoga = createYoga<Context>({
             last_seen_at: trackedRepo.lastSeenAt?.toISOString(),
           }));
         },
-        getTrackedRepository: async (_, { name, owner }) => {
+        getTrackedRepository: async (_, { owner, name }, ctx) => {
+          const userId = ctx.userId;
           const repo = await db.query.repositories.findFirst({
             where: and(
-              eq(repositories.name, name),
-              eq(repositories.owner, owner)
+              eq(repositories.owner, owner),
+              eq(repositories.name, name)
             ),
           });
-
           if (!repo) {
-            return null;
+            throw new Error("Repository not found");
+          }
+
+          const trackedRepo = await db.query.trackedRepositories.findFirst({
+            where: and(
+              eq(trackedRepositories.userId, userId),
+              eq(trackedRepositories.repoId, repo.repoId)
+            ),
+          });
+          if (!trackedRepo) {
+            throw new Error("Repository not found");
           }
 
           const repoInfo = await fetchRepositoryInfo(repo.repoId);
-
           return {
+            id: repo.id,
+            repoId: repo.repoId.toString(),
+            description: repoInfo.description,
             name: repoInfo.name,
             owner: repoInfo.owner,
-            description: repoInfo.description,
-            language: null,
             published_at: repoInfo.publishedAt,
-            tag_name: repoInfo.releaseTag,
-            body: repoInfo.releaseNotes,
-            commit: repoInfo.releaseCommit,
-            seen: false,
-            stars: 0,
-            url: `https://github.com/${repoInfo.owner}/${repoInfo.name}`,
+            last_seen_at: trackedRepo.lastSeenAt?.toISOString(),
+            release_tag: repoInfo.releaseTag,
+            release_notes: repoInfo.releaseNotes,
+            release_commit: repoInfo.releaseCommit,
           };
         },
       },

@@ -29,8 +29,8 @@ export interface TrackedRepository {
 }
 
 export interface TrackedRepositoryRelease extends TrackedRepository {
-  body: string | null;
-  commit: string | null;
+  release_commit: string | null;
+  release_notes: string | null;
 }
 
 // Define response types
@@ -156,13 +156,14 @@ export const markRepositoryAsSeen = async (repoId: string) => {
   return response.markRepositoryAsSeen;
 };
 
-export const getTrackedRepository = async (repoId: string) => {
+export const getTrackedRepository = async (owner: string, name: string) => {
   const query = `
-    query GetTrackedRepository($repoId: String!) {
-      getTrackedRepository(repoId: $repoId) {
+    query GetTrackedRepository($owner: String!, $name: String!) {
+      getTrackedRepository(owner: $owner, name: $name) {
         description
         name
         owner
+        last_seen_at
         published_at
         release_tag
         release_commit
@@ -172,7 +173,7 @@ export const getTrackedRepository = async (repoId: string) => {
   `;
   const response = await graphqlClient.request<GetTrackedRepositoryResponse>(
     query,
-    { repoId },
+    { owner, name },
   );
   return response.getTrackedRepository;
 };
