@@ -68,6 +68,11 @@ interface RefreshRepositoriesResponse {
     }[];
   };
 }
+
+interface RefreshRepositoryResponse {
+  refreshRepository: TrackedRepositoryRelease;
+}
+
 // Example query to search repositories
 export const searchRepositories = async (query: string, limit: number = 10) => {
   const gqlQuery = `
@@ -199,4 +204,28 @@ export const refreshRepositories = async () => {
   const response =
     await graphqlClient.request<RefreshRepositoriesResponse>(mutation);
   return response.refreshRepositories;
+};
+
+export const refreshRepository = async (repoId: string) => {
+  const mutation = `
+    mutation RefreshRepository($repoId: String!) {
+      refreshRepository(repoId: $repoId) {
+        id
+        repoId
+        description
+        name
+        owner
+        last_seen_at
+        published_at
+        release_tag
+        release_commit
+        release_notes
+      }
+    }
+  `;
+  const response = await graphqlClient.request<RefreshRepositoryResponse>(
+    mutation,
+    { repoId },
+  );
+  return response.refreshRepository;
 };

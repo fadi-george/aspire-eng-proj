@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { hasNewRelease } from "@/lib/general";
-import { getTrackedRepository } from "@/lib/graphql";
+import { getTrackedRepository, refreshRepository } from "@/lib/graphql";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createFileRoute,
   Navigate,
@@ -16,6 +16,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { ArrowLeft, GitCommitVertical } from "lucide-react";
+import { useEffect } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/_auth/repo/$owner/$name")({
 });
 
 function RouteComponent() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate({ from: "/repo/$owner/$name" });
   const { owner, name } = useParams({
     from: "/_auth/repo/$owner/$name",
@@ -32,26 +34,43 @@ function RouteComponent() {
   const routerState = useRouterState();
   const state = routerState.location.state;
 
+  // get repo info
   const {
     data: repository,
-    isFetching,
     isLoading,
-    refetch,
+    error,
   } = useQuery({
     queryKey: ["repository", owner, name],
     queryFn: () => getTrackedRepository(owner, name),
     enabled: !!owner && !!name,
   });
 
+  // refresh repo info
+  const { mutate: refreshRepo, isPending: isRefreshing } = useMutation({
+    mutationFn: () => {
+      if (repository?.repoId) {
+        return refreshRepository(repository.repoId);
+      }
+      throw new Error("Repository not found");
+    },
+    onSuccess: (response) => {
+      queryClient.setQueryData(["repository", owner, name], () => response);
+    },
+    onError: () => {
+      toast.error("Failed to refresh repository.");
+    },
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast.error("Repository is not tracked.");
+      navigate({ to: "/" });
+    }
+  }, [error, navigate]);
+
   if (!owner || !name) {
     return <Navigate to="/" />;
   }
-
-  if (!repository && !isLoading) {
-    toast.error("Repository is not tracked.");
-    return <Navigate to="/" />;
-  }
-
   const {
     description,
     repoId,
@@ -74,7 +93,7 @@ function RouteComponent() {
   return (
     <div className="pb-10">
       <div className="[view-transition-name:repo-section-header] sticky top-0 bg-slate-50 z-1 pt-[10px] mt-[-10px]">
-        <div className="flex items-center justify-between gap-2 pb-2 ">
+        <div className="flex items-center justify-between gap-2 pb-2 flex-wrap ">
           {/* Back button */}
           <span className="flex items-center gap-2">
             <Button
@@ -95,10 +114,10 @@ function RouteComponent() {
           {/* Mark as seen and refresh latest button */}
           <span className="flex items-center gap-2">
             {isNewRelease && <MarkSeenButton repoId={repoId} />}
-            <RefreshButton isFetching={isFetching} onRefresh={refetch} />
+            <RefreshButton isFetching={isRefreshing} onRefresh={refreshRepo} />
           </span>
         </div>
-        <span className="pb-3 pl-[44px] block text-gray-500 whitespace-pre-wrap">
+        <span className="pb-3 pl-[44px] block text-gray-500 whitespace-pre-wrap ">
           {isLoading ? <Skeleton className="w-[200px] h-4" /> : description}
         </span>
         <hr />

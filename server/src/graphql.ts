@@ -145,6 +145,7 @@ export const yoga = createYoga<Context>({
         trackRepository(repoId: String!): TrackedRepository!
         untrackRepository(repoId: String!): Boolean!
         markRepositoryAsSeen(repoId: String!): MarkRepositoryAsSeenResponse!
+        refreshRepository(repoId: String!): TrackedRepositoryRelease!
         refreshRepositories: RefreshRepositoriesResponse!
       }
     `,
@@ -279,7 +280,7 @@ export const yoga = createYoga<Context>({
             name: repo.name,
             owner: repo.owner,
             description: repo.description,
-            published_at: repo.publishedAt,
+            published_at: repo.publishedAt?.toISOString(),
             release_tag: repo.releaseTag,
             last_seen_at: null,
           };
@@ -367,6 +368,35 @@ export const yoga = createYoga<Context>({
             failedRepos,
           };
         },
+        refreshRepository: async (_, { repoId }, ctx) => {
+          const userId = ctx.userId;
+          const repo = (await refreshRepository(repoId))[0];
+          if (!repo) {
+            throw new Error("Repository not found");
+          }
+          const trackedRepo = await db.query.trackedRepositories.findFirst({
+            where: and(
+              eq(trackedRepositories.userId, userId),
+              eq(trackedRepositories.repoId, repo.repoId)
+            ),
+          });
+          if (!trackedRepo) {
+            throw new Error("Repository not found");
+          }
+
+          return {
+            id: repo.id,
+            repoId: repo.repoId.toString(),
+            description: repo.description,
+            name: repo.name,
+            owner: repo.owner,
+            published_at: repo.publishedAt?.toISOString(),
+            last_seen_at: trackedRepo.lastSeenAt?.toISOString(),
+            release_tag: repo.releaseTag,
+            release_notes: repo.releaseNotes,
+            release_commit: repo.releaseCommit,
+          };
+        },
       },
     },
   }),
@@ -405,5 +435,6 @@ export const refreshRepository = async (id: string) => {
       releaseCommit: repoInfo.releaseCommit,
       releaseNotes: repoInfo.releaseNotes,
     })
-    .where(eq(repositories.repoId, repoId));
+    .where(eq(repositories.repoId, repoId))
+    .returning();
 };
