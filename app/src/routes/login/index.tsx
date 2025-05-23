@@ -1,4 +1,4 @@
-import BackgroundImg from "@/assets/pattern-2.jpeg";
+import BackgroundImg from "@/assets/pattern-1.jpeg";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { SiGithub } from "@icons-pack/react-simple-icons";
@@ -27,10 +27,11 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col items-center h-full">
-      <img
-        src={BackgroundImg}
-        alt="logo"
-        className="fixed top-0 left-0 z-[-1] w-[80%] m-auto right-0"
+      <div
+        className="fixed top-0 left-0 w-full h-full z-[-1] bg-no-repeat bg-[position:50%_10%] bg-[size:auto_50%]"
+        style={{
+          backgroundImage: `url(${BackgroundImg})`,
+        }}
       />
       <div className="relative top-[30%] max-w-[400px] flex flex-col items-center">
         <h1 className="text-4xl font-bold mb-4">Git Tracker</h1>
