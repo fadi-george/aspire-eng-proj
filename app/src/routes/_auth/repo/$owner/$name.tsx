@@ -15,11 +15,11 @@ import {
   useParams,
   useRouterState,
 } from "@tanstack/react-router";
-import dompurify from "dompurify";
 import { ArrowLeft, GitCommitVertical } from "lucide-react";
-import { marked } from "marked";
-import { useEffect, useState } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
+
 export const Route = createFileRoute("/_auth/repo/$owner/$name")({
   component: RouteComponent,
 });
@@ -31,7 +31,6 @@ function RouteComponent() {
   });
   const routerState = useRouterState();
   const state = routerState.location.state;
-  const [parsedNotes, setParsedNotes] = useState<string>("");
 
   const {
     data: repository,
@@ -43,16 +42,6 @@ function RouteComponent() {
     queryFn: () => getTrackedRepository(owner, name),
     enabled: !!owner && !!name,
   });
-
-  useEffect(() => {
-    const getParsedNotes = async () => {
-      const release_notes = repository?.release_notes ?? "";
-      const notes = await marked.parse(release_notes);
-      setParsedNotes(dompurify.sanitize(notes));
-    };
-
-    getParsedNotes();
-  }, [repository?.release_notes]);
 
   if (!owner || !name) {
     return <Navigate to="/" />;
@@ -80,6 +69,7 @@ function RouteComponent() {
   };
 
   const isNewRelease = hasNewRelease({ last_seen_at, published_at });
+  const release_notes = repository?.release_notes ?? "";
 
   return (
     <div className="pb-10">
@@ -115,15 +105,13 @@ function RouteComponent() {
       </div>
 
       <Card
-        className={cn("mt-4 mx-auto max-w-5xl", {
-          "pb-0": !isLoading,
-        })}
+        className={cn("mt-4 mx-auto max-w-5xl")}
         style={{
           viewTransitionName: `card-${owner}-${name}`,
         }}
       >
         <CardHeader>
-          <CardTitle className="flex justify-between">
+          <CardTitle className="flex justify-between flex-wrap gap-2">
             <h2>Latest Release</h2>
             <span className="flex flex-row gap-4 items-center">
               {isLoading ? (
@@ -136,7 +124,7 @@ function RouteComponent() {
                 <>
                   {/* Release metadata */}
                   {release_commit && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 ml-[-8px]">
                       <GitCommitVertical /> {release_commit.slice(0, 7)}
                     </span>
                   )}
@@ -162,10 +150,19 @@ function RouteComponent() {
               <Skeleton className="w-4/6 h-[20px]" />
             </div>
           ) : (
-            <div
-              className="whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: parsedNotes }}
-            />
+            <>
+              {release_notes ? (
+                <div className="prose max-w-full markdown-body">
+                  <Markdown remarkPlugins={[remarkGfm]}>
+                    {repository?.release_notes ?? ""}
+                  </Markdown>
+                </div>
+              ) : (
+                <p className="text-center text-gray-600 text-lg">
+                  No release notes found.
+                </p>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

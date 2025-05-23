@@ -14,7 +14,7 @@ function Root() {
   return (
     <>
       <Toaster richColors position="bottom-right" />
-      <header className="flex justify-between items-center px-12 max-w-7xl m-auto pt-3">
+      <header className="flex justify-between items-center px-12 max-w-7xl m-auto pt-3 absolute left-0 right-0">
         <img src="/aspire.png" alt="logo" className="h-6" />
         {user ? <Button onClick={logout}>Logout</Button> : null}
       </header>

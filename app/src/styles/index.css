@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./markdown.css";
+
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -143,4 +146,3 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-

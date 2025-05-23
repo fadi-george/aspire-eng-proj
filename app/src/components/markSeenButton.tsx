@@ -39,9 +39,11 @@ export const MarkSeenButton = ({ repoId }: { repoId: string }) => {
           setIsFetching(false);
         });
       }}
-      style={{
-        viewTransitionName: `mark-seen-${repoId}`,
-      }}
+      style={
+        {
+          // viewTransitionName: `mark-seen-${repoId}`,
+        }
+      }
     >
       Mark seen
     </Button>
