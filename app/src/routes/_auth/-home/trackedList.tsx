@@ -30,6 +30,7 @@ export const RepositoryList = () => {
     data: repositories,
     isFetched,
     isLoading,
+    isFetching: isFetchingRepos,
     refetch,
   } = useQuery({
     queryKey: ["trackedRepositories"],
@@ -55,8 +56,14 @@ export const RepositoryList = () => {
 
   const { mutate: refresh, isPending: isRefreshing } = useMutation({
     mutationFn: refreshRepositories,
-    onSuccess: () => {
+    onSuccess: async (data) => {
       refetch();
+      if (data.failedRepos.length > 0) {
+        toast.warning(
+          `Some repositories failed to refresh. Check console for details.`,
+        );
+        console.warn("Failed repositories:", data.failedRepos);
+      }
     },
     onError: () => {
       toast.error("Failed to get latest updates");
@@ -76,7 +83,10 @@ export const RepositoryList = () => {
         <span className="flex items-center gap-2 justify-between pb-2 [view-transition-name:repo-section-header]">
           <h2>Tracked Repositories</h2>
           {isFetched && (
-            <RefreshButton isFetching={isRefreshing} onRefresh={refresh} />
+            <RefreshButton
+              isFetching={isRefreshing || isFetchingRepos}
+              onRefresh={refresh}
+            />
           )}
         </span>
         <hr />

@@ -123,6 +123,15 @@ export const yoga = createYoga<Context>({
         lastSeenAt: String!
       }
 
+      type FailedRepository {
+        repoId: String!
+        name: String!
+        owner: String!
+      }
+      type RefreshRepositoriesResponse {
+        failedRepos: [FailedRepository!]!
+      }
+
       type Query {
         searchRepositories(query: String!, limit: Int = 10): [Repository!]!
         getTrackedRepositories: [TrackedRepository!]!
@@ -136,7 +145,7 @@ export const yoga = createYoga<Context>({
         trackRepository(repoId: String!): TrackedRepository!
         untrackRepository(repoId: String!): Boolean!
         markRepositoryAsSeen(repoId: String!): MarkRepositoryAsSeenResponse!
-        refreshRepositories: Boolean!
+        refreshRepositories: RefreshRepositoriesResponse!
       }
     `,
     resolvers: {
@@ -333,31 +342,30 @@ export const yoga = createYoga<Context>({
             },
           });
 
-          let promises = [];
+          const promises = [];
+          let failedRepos: {
+            repoId: string;
+            name: string;
+            owner: string;
+          }[] = [];
           for (const repo of trackedRepos) {
-            const repoInfo = await fetchRepositoryInfo(repo.repository.repoId);
-
             // in rare cases, owner and name may change over time
             // also we want to grab the latest release information
             promises.push(
-              db
-                .update(repositories)
-                .set({
-                  name: repoInfo.name,
-                  owner: repoInfo.owner,
-                  description: repoInfo.description,
-                  publishedAt: repoInfo.publishedAt
-                    ? new Date(repoInfo.publishedAt)
-                    : null,
-                  releaseTag: repoInfo.releaseTag,
-                  releaseCommit: repoInfo.releaseCommit,
-                  releaseNotes: repoInfo.releaseNotes,
-                })
-                .where(eq(repositories.id, repo.repository.id))
+              refreshRepository(repo.repository.repoId.toString()).catch(() => {
+                failedRepos.push({
+                  repoId: repo.repository.repoId.toString(),
+                  name: repo.repository.name,
+                  owner: repo.repository.owner,
+                });
+              })
             );
           }
           await Promise.all(promises);
-          return true;
+
+          return {
+            failedRepos,
+          };
         },
       },
     },
@@ -381,3 +389,21 @@ export const yoga = createYoga<Context>({
     }),
   ],
 });
+
+export const refreshRepository = async (id: string) => {
+  const repoId = BigInt(id);
+  const repoInfo = await fetchRepositoryInfo(BigInt(repoId));
+
+  return db
+    .update(repositories)
+    .set({
+      name: repoInfo.name,
+      owner: repoInfo.owner,
+      description: repoInfo.description,
+      publishedAt: repoInfo.publishedAt ? new Date(repoInfo.publishedAt) : null,
+      releaseTag: repoInfo.releaseTag,
+      releaseCommit: repoInfo.releaseCommit,
+      releaseNotes: repoInfo.releaseNotes,
+    })
+    .where(eq(repositories.repoId, repoId));
+};

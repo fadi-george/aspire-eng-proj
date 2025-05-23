@@ -8,6 +8,10 @@ import jwt from "jsonwebtoken";
 import db from "./db";
 import { users } from "./db/schema";
 import { yoga } from "./graphql";
+
+// Start cron job
+import "./cron";
+
 interface JWTPayload {
   userId: number;
 }

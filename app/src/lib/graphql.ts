@@ -59,11 +59,15 @@ interface MarkRepositoryAsSeenResponse {
 interface GetTrackedRepositoryResponse {
   getTrackedRepository: TrackedRepositoryRelease | null;
 }
-
 interface RefreshRepositoriesResponse {
-  refreshRepositories: boolean;
+  refreshRepositories: {
+    failedRepos: {
+      repoId: string;
+      name: string;
+      owner: string;
+    }[];
+  };
 }
-
 // Example query to search repositories
 export const searchRepositories = async (query: string, limit: number = 10) => {
   const gqlQuery = `
@@ -183,7 +187,13 @@ export const getTrackedRepository = async (owner: string, name: string) => {
 export const refreshRepositories = async () => {
   const mutation = `
     mutation RefreshRepositories {
-      refreshRepositories
+      refreshRepositories {
+        failedRepos {
+          repoId
+          name
+          owner
+        }
+      }
     }
   `;
   const response =
