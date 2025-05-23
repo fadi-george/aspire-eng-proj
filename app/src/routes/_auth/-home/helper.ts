@@ -35,16 +35,15 @@ export const filterRepos = (
     }
 
     if (sortBy.key === "published_at") {
-      const oldestDate = new Date("1970-01-01").toISOString();
-      filtered.sort((a, b) =>
-        sortBy.direction === "asc"
-          ? (a.published_at || oldestDate).localeCompare(
-              b.published_at || oldestDate,
-            )
-          : (b.published_at || oldestDate).localeCompare(
-              a.published_at || oldestDate,
-            ),
-      );
+      filtered.sort((a, b) => {
+        if (!a.published_at && !b.published_at) return 0;
+        if (!a.published_at) return sortBy.direction === "asc" ? 1 : -1;
+        if (!b.published_at) return sortBy.direction === "asc" ? -1 : 1;
+
+        return sortBy.direction === "asc"
+          ? a.published_at.localeCompare(b.published_at)
+          : b.published_at.localeCompare(a.published_at);
+      });
     }
   }
 
