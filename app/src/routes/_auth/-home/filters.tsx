@@ -21,7 +21,7 @@ export default function Filters({
   setSortBy,
 }: {
   filter: { search: string; unseen: boolean };
-  setFilter: (filter: { search: string; unseen: boolean | null }) => void;
+  setFilter: (filter: { search: string; unseen: boolean }) => void;
   sortBy: {
     key: "name" | "published_at" | null;
     direction: "asc" | "desc" | null;
@@ -53,7 +53,7 @@ export default function Filters({
           <TooltipTrigger asChild>
             <Button
               size="icon"
-              variant="outline"
+              variant={isUnseen ? "default" : "outline"}
               onClick={() => setFilter({ ...filter, unseen: !isUnseen })}
             >
               <PackageCheck />

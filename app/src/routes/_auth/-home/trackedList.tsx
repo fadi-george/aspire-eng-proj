@@ -81,10 +81,10 @@ export const RepositoryList = () => {
   } | null>(null);
   const [filter, setFilter] = useState<{
     search: string;
-    unseen: boolean | null;
+    unseen: boolean;
   }>({
     search: "",
-    unseen: null,
+    unseen: false,
   });
   const [sortBy, setSortBy] = useState<{
     key: "name" | "published_at" | null;
