@@ -29,3 +29,15 @@ The client id should be same as the one in the server env file.
 ## Running
 
 You could also open two terminal instances and run `bun run dev` for the `/app` and `/server` folders.
+
+## Features
+
+- Users can search a repository by name and then click to track it. All new tracked repos will be considered not to have seen the latest release.
+- The user can mark a release as seen using the "Mark seen" button. Future releases should have a more recent `published_at` date which will determine if it should show the mark seen button again.
+- A user can click a tracked repository card to view the latest release information such as the release notes/markdown, release commit, version (tag_name), and published date.
+- Clicking the refresh button on the list page will refresh all repos with their latest information (tag, publish date, etc.) and even the owner and name should that change. Refreshing on the release notes page will refresh the current repo.
+- A cron job runs every 15 minutes to fetch the latest info for each repo.
+
+## Future Improvements
+
+Given more time, I would have liked to implement a webhook strategy for fetching release information and not rely on some arbitrary cron timer.

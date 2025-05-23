@@ -61,7 +61,7 @@ export const Search = () => {
       <Command className="rounded-lg border shadow-md md:min-w-[450px]">
         <CommandInput
           disabled={isPending}
-          placeholder="Search repositories"
+          placeholder="Search repositories to track"
           className="h-9"
           value={search}
           onValueChange={(value) => setSearch(value)}

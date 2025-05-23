@@ -23,6 +23,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import Filters from "./filters";
+import { filterRepos } from "./helper";
 
 export const RepositoryList = () => {
   const queryClient = useQueryClient();
@@ -37,6 +39,7 @@ export const RepositoryList = () => {
     queryFn: getTrackedRepositories,
   });
 
+  // untrack a repo
   const { mutate: untrackRepo, isPending: isRemovingRepo } = useMutation({
     mutationFn: ({ repoId }: { repoId: string }) => untrackRepository(repoId),
     onSuccess: (_, { repoId }) => {
@@ -54,6 +57,7 @@ export const RepositoryList = () => {
     },
   });
 
+  // get latest info for all repos
   const { mutate: refresh, isPending: isRefreshing } = useMutation({
     mutationFn: refreshRepositories,
     onSuccess: async (data) => {
@@ -75,19 +79,44 @@ export const RepositoryList = () => {
     owner: string;
     repoId: string;
   } | null>(null);
+  const [filter, setFilter] = useState<{
+    search: string;
+    unseen: boolean | null;
+  }>({
+    search: "",
+    unseen: null,
+  });
+  const [sortBy, setSortBy] = useState<{
+    key: "name" | "published_at" | null;
+    direction: "asc" | "desc" | null;
+  }>({
+    key: "name",
+    direction: "asc",
+  });
+  console.log(sortBy);
+
+  const filteredRepos = filterRepos(repositories ?? [], filter, sortBy);
 
   return (
     <div className="flex flex-1 pt-10">
       <div className="w-full pb-5">
         {/* Header */}
-        <span className="flex items-center gap-2 justify-between pb-2 [view-transition-name:repo-section-header]">
+        <span className="flex items-center gap-2 justify-between pb-2 flex-wrap [view-transition-name:repo-section-header]">
           <h2>Tracked Repositories</h2>
-          {isFetched && (
-            <RefreshButton
-              isFetching={isRefreshing || isFetchingRepos}
-              onRefresh={refresh}
+          <div className="flex items-center gap-2">
+            <Filters
+              filter={filter}
+              setFilter={setFilter}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
             />
-          )}
+            {isFetched && (
+              <RefreshButton
+                isFetching={isRefreshing || isFetchingRepos}
+                onRefresh={refresh}
+              />
+            )}
+          </div>
         </span>
         <hr />
 
@@ -101,7 +130,7 @@ export const RepositoryList = () => {
             </>
           ) : (
             <>
-              {repositories?.map((repository) => {
+              {filteredRepos.map((repository) => {
                 const { name, owner, repoId } = repository;
                 return (
                   <RepositoryCard
@@ -117,6 +146,11 @@ export const RepositoryList = () => {
                   />
                 );
               })}
+              {filteredRepos.length === 0 && (
+                <div className="col-span-full text-center text-lg text-gray-500 pt-6">
+                  No repositories found
+                </div>
+              )}
             </>
           )}
         </div>

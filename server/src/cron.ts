@@ -9,7 +9,9 @@ cron.schedule("*/15 * * * *", async () => {
   for (const repository of repositories) {
     await refreshRepository(repository.repoId.toString())
       .then(() => {
-        console.log(`Cron: Refreshed repository ${repository.repoId}`);
+        console.log(
+          `Cron: Refreshed repository ${repository.owner}/${repository.name}`
+        );
       })
       .catch((err) => {
         console.error(err);
