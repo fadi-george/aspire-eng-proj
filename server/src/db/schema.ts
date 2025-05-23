@@ -40,7 +40,7 @@ export const repositories = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (table) => [unique("unique_repo").on(table.owner, table.name)]
+  (table) => [unique("unique_repo_id").on(table.repoId)]
 );
 
 export const trackedRepositories = pgTable(
