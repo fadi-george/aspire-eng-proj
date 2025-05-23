@@ -27,7 +27,7 @@ export const PackageTag = ({
         <Package />
         {release_tag}
         {isNewRelease && (
-          <Badge className="border-yellow-500 bg-yellow-100 text-yellow-800 rounded-lg leading-[1.25] ">
+          <Badge className="border-yellow-500 bg-yellow-100 text-yellow-800 rounded-lg leading-[1.2] ">
             New
           </Badge>
         )}

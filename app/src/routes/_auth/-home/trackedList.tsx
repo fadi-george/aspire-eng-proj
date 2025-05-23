@@ -227,8 +227,10 @@ const RepositoryCard = ({
       }}
     >
       <CardHeader className="gap-0">
-        <CardTitle className="flex items-center gap-2">
-          <span className="flex-1">{name}</span>
+        <CardTitle className="flex items-center gap-2 overflow-hidden">
+          <span className="flex-1 truncate" title={name}>
+            {name}
+          </span>
           {isNewRelease && <MarkSeenButton repoId={repoId} />}
           <Button
             variant="ghost"
@@ -245,11 +247,15 @@ const RepositoryCard = ({
       <CardContent>
         <CardDescription>
           <div className="mt-2">
-            <PackageTag
-              release_tag={release_tag}
-              published_at={published_at}
-              last_seen_at={last_seen_at}
-            />
+            {release_tag ? (
+              <PackageTag
+                release_tag={release_tag}
+                published_at={published_at}
+                last_seen_at={last_seen_at}
+              />
+            ) : (
+              <div className="text-sm text-gray-500">No release tag</div>
+            )}
           </div>
           <div className="mt-3 line-clamp-2">{repository.description}</div>
         </CardDescription>
