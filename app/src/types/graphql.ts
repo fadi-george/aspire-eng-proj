@@ -15,6 +15,7 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  Void: { input: void; output: void; }
 };
 
 export type FailedRepository = {
@@ -35,7 +36,7 @@ export type Mutation = {
   refreshRepositories: RefreshRepositoriesResponse;
   refreshRepository: TrackedRepositoryRelease;
   trackRepository: TrackedRepository;
-  untrackRepository: Scalars['Boolean']['output'];
+  untrackRepository?: Maybe<Scalars['Void']['output']>;
 };
 
 

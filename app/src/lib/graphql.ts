@@ -12,6 +12,12 @@ export const graphqlClient = new GraphQLClient(
 type QueryResponse<T extends keyof Query> = Pick<Query, T>;
 type MutationResponse<T extends keyof Mutation> = Pick<Mutation, T>;
 
+/**
+ * Search GitHub repositories by some search term
+ * @param query - Search term (e.g., "react", "typescript")
+ * @param limit - Maximum number of results (default: 10)
+ * @returns Array of repository results with metadata
+ */
 export const searchRepositories = async (query: string, limit: number = 10) => {
   const gqlQuery = gql`
     query SearchRepositories($query: String!, $limit: Int!) {
@@ -30,6 +36,11 @@ export const searchRepositories = async (query: string, limit: number = 10) => {
   return response.searchRepositories;
 };
 
+/**
+ * Add a repository to the user's tracked list
+ * @param repoId - GitHub repository ID
+ * @returns The newly tracked repository object
+ */
 export const trackRepository = async (repoId: string) => {
   const mutation = gql`
     mutation TrackRepository($repoId: String!) {
@@ -51,7 +62,10 @@ export const trackRepository = async (repoId: string) => {
   return response.trackRepository;
 };
 
-// Mutation to untrack a repository
+/**
+ * Remove a repository from the user's tracked list
+ * @param repoId - GitHub repository ID to untrack
+ */
 export const untrackRepository = async (repoId: string) => {
   const mutation = gql`
     mutation UntrackRepository($repoId: String!) {
@@ -64,6 +78,10 @@ export const untrackRepository = async (repoId: string) => {
   return response.untrackRepository;
 };
 
+/**
+ * Get all repositories currently being tracked by the user
+ * @returns Array of tracked repositories with release information
+ */
 export const getTrackedRepositories = async () => {
   const query = gql`
     query {
@@ -84,6 +102,10 @@ export const getTrackedRepositories = async () => {
   return response.getTrackedRepositories;
 };
 
+/**
+ * Mark a repository as "seen" by updating the last seen at timestamp
+ * @returns The new last seen at timestamp
+ */
 export const markRepositoryAsSeen = async (repoId: string) => {
   const mutation = gql`
     mutation MarkRepositoryAsSeen($repoId: String!) {
@@ -98,6 +120,12 @@ export const markRepositoryAsSeen = async (repoId: string) => {
   return response.markRepositoryAsSeen;
 };
 
+/**
+ * Get tracked repository information with release notes and commit information
+ * @param owner - GitHub repository owner
+ * @param name - GitHub repository name
+ * @returns Tracked repository information with release details
+ */
 export const getTrackedRepository = async (owner: string, name: string) => {
   const query = gql`
     query GetTrackedRepository($owner: String!, $name: String!) {
@@ -121,6 +149,11 @@ export const getTrackedRepository = async (owner: string, name: string) => {
   return response.getTrackedRepository;
 };
 
+/**
+ * Refresh data (release tag, published at date, etc.) for all tracked repositories
+ * including owner and name should those change if at all
+ * @returns Object containing any repositories that failed to refresh
+ */
 export const refreshRepositories = async () => {
   const mutation = gql`
     mutation RefreshRepositories {
@@ -140,6 +173,11 @@ export const refreshRepositories = async () => {
   return response.refreshRepositories;
 };
 
+/**
+ * Refresh release data for a single repository
+ * @param repoId - GitHub repository ID
+ * @returns The refreshed repository information (published at date, release tag, etc.)
+ */
 export const refreshRepository = async (repoId: string) => {
   const mutation = gql`
     mutation RefreshRepository($repoId: String!) {

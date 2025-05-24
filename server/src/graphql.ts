@@ -87,6 +87,8 @@ interface Context extends YogaInitialContext {
 export const yoga = createYoga<Context>({
   schema: createSchema({
     typeDefs: /* GraphQL */ `
+      scalar Void
+
       type Repository {
         id: String!
         name: String!
@@ -143,7 +145,7 @@ export const yoga = createYoga<Context>({
 
       type Mutation {
         trackRepository(repoId: String!): TrackedRepository!
-        untrackRepository(repoId: String!): Boolean!
+        untrackRepository(repoId: String!): Void
         markRepositoryAsSeen(repoId: String!): MarkRepositoryAsSeenResponse!
         refreshRepository(repoId: String!): TrackedRepositoryRelease!
         refreshRepositories: RefreshRepositoriesResponse!
@@ -295,20 +297,14 @@ export const yoga = createYoga<Context>({
             throw new Error("Repository not found");
           }
 
-          try {
-            await db
-              .delete(trackedRepositories)
-              .where(
-                and(
-                  eq(trackedRepositories.userId, userId),
-                  eq(trackedRepositories.repoId, repo.repoId)
-                )
-              );
-            return true;
-          } catch (error) {
-            console.error(error);
-            return false;
-          }
+          await db
+            .delete(trackedRepositories)
+            .where(
+              and(
+                eq(trackedRepositories.userId, userId),
+                eq(trackedRepositories.repoId, repo.repoId)
+              )
+            );
         },
         markRepositoryAsSeen: async (_, { repoId }, ctx) => {
           const userId = ctx.userId;

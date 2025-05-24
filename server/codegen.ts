@@ -12,6 +12,9 @@ const config: CodegenConfig = {
       ],
       config: {
         rawRequest: false,
+        scalars: {
+          Void: "void",
+        },
       },
     },
     // "./graphql.schema.json": {
