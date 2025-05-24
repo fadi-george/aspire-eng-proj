@@ -1,3 +1,7 @@
+/*
+ * This is a modified version of the GitHub markdown styles
+ * https://github.com/sindresorhus/github-markdown-css/blob/main/github-markdown-light.css
+ */
 /* light */
 .markdown-body {
   color-scheme: light;
@@ -1128,6 +1132,7 @@
   min-height: 52px;
 }
 
+/* Overrides */
 .markdown-body {
   code {
     @apply after:content-[''] before:content-[''];
