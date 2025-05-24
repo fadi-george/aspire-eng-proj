@@ -1,4 +1,5 @@
-import { markRepositoryAsSeen, type TrackedRepository } from "@/lib/graphql";
+import { markRepositoryAsSeen } from "@/lib/graphql";
+import type { TrackedRepository } from "@/types/graphql";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "./ui/button";

@@ -8,12 +8,8 @@ import {
 } from "@/components/ui/command";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatNumber } from "@/lib/general";
-import {
-  searchRepositories,
-  trackRepository,
-  type Repository,
-  type TrackedRepository,
-} from "@/lib/graphql";
+import { searchRepositories, trackRepository } from "@/lib/graphql";
+import type { Repository, TrackedRepository } from "@/types/graphql";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";

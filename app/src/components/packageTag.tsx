@@ -9,9 +9,9 @@ export const PackageTag = ({
   published_at,
   last_seen_at,
 }: {
-  release_tag: string | null;
-  published_at: string | null;
-  last_seen_at: string | null;
+  release_tag?: string | null;
+  published_at?: string | null;
+  last_seen_at?: string | null;
 }) => {
   const isNewRelease = hasNewRelease({
     last_seen_at,

@@ -16,8 +16,8 @@ import {
   getTrackedRepositories,
   refreshRepositories,
   untrackRepository,
-  type TrackedRepository,
 } from "@/lib/graphql";
+import type { TrackedRepository } from "@/types/graphql";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { X } from "lucide-react";
