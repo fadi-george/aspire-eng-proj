@@ -121,7 +121,7 @@
     @apply text-foreground bg-slate-50;
   }
   a {
-    @apply text-blue-500 font-medium;
+    @apply font-medium text-blue-500;
   }
   hr {
     @apply border-slate-300;
@@ -146,3 +146,4 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+

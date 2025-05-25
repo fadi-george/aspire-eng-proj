@@ -9,4 +9,11 @@ declare module "@tanstack/react-router" {
   }
 }
 
+// Add ViewTransition type declaration
+declare module "react" {
+  export const unstable_ViewTransition: React.ComponentType<{
+    children: React.ReactNode;
+  }>;
+}
+
 export {};

@@ -21,7 +21,12 @@ import type { TrackedRepository } from "@/types/graphql";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { X } from "lucide-react";
-import { useState } from "react";
+import {
+  startTransition,
+  useEffect,
+  useState,
+  unstable_ViewTransition as ViewTransition,
+} from "react";
 import { toast } from "sonner";
 import Filters from "./filters";
 import { filterRepos } from "./helper";
@@ -38,6 +43,7 @@ export const RepositoryList = () => {
     queryKey: ["trackedRepositories"],
     queryFn: getTrackedRepositories,
   });
+  const [filteredRepos, setFilteredRepos] = useState<TrackedRepository[]>([]);
 
   // untrack a repo
   const { mutate: untrackRepo, isPending: isRemovingRepo } = useMutation({
@@ -94,7 +100,11 @@ export const RepositoryList = () => {
     direction: "asc",
   });
 
-  const filteredRepos = filterRepos(repositories ?? [], filter, sortBy);
+  useEffect(() => {
+    startTransition(() => {
+      setFilteredRepos(filterRepos(repositories ?? [], filter, sortBy));
+    });
+  }, [filter, repositories, sortBy]);
 
   return (
     <div className="flex flex-1 pt-10">
@@ -132,17 +142,19 @@ export const RepositoryList = () => {
               {filteredRepos.map((repository) => {
                 const { name, owner, repoId } = repository;
                 return (
-                  <RepositoryCard
-                    key={name}
-                    repository={repository}
-                    onRemove={() =>
-                      setDeleteRepoInfo({
-                        name: name,
-                        owner: owner,
-                        repoId: repoId,
-                      })
-                    }
-                  />
+                  <ViewTransition key={name}>
+                    <RepositoryCard
+                      key={name}
+                      repository={repository}
+                      onRemove={() =>
+                        setDeleteRepoInfo({
+                          name: name,
+                          owner: owner,
+                          repoId: repoId,
+                        })
+                      }
+                    />
+                  </ViewTransition>
                 );
               })}
               {filteredRepos.length === 0 && (
@@ -214,7 +226,7 @@ const RepositoryCard = ({
   return (
     <Card
       key={name}
-      className="cursor-pointer gap-1"
+      className="card cursor-pointer gap-1 [view-transition-class:card]"
       onClick={() => {
         navigate({
           to: `/repo/${owner}/${name}`,
