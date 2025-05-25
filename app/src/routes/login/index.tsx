@@ -2,29 +2,31 @@ import BackgroundImg from "@/assets/pattern-1.jpeg";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { SiGithub } from "@icons-pack/react-simple-icons";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { z } from "zod";
 
 export const Route = createFileRoute("/login/")({
+  validateSearch: z.object({
+    redirect: z.string().optional().catch(""),
+  }),
+  beforeLoad: async ({ context, search }) => {
+    const { auth } = context;
+
+    let user = auth.user;
+    if (!user) {
+      user = await auth.getUser();
+    }
+
+    if (user) {
+      throw redirect({ to: search.redirect || "/" });
+    }
+  },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { getUser, login, logout } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    getUser()
-      .then((user) => {
-        if (user) {
-          navigate({ to: "/" });
-        }
-      })
-      .catch(() => {
-        logout();
-      });
-  }, [getUser, logout, navigate]);
-
+  console.log("RouteComponent");
+  const { login } = useAuth();
   return (
     <div className="flex flex-col items-center h-full">
       <div

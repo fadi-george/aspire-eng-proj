@@ -1,3 +1,4 @@
+import { apiClient } from "@/lib/api";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -27,13 +28,8 @@ function LoginCallback() {
 
     const getToken = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/auth/github", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ code }),
+        const response = await apiClient.post("/api/auth/github", {
+          code,
         });
 
         if (response.ok) {

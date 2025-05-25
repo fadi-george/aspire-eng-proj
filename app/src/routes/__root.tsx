@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import type { AuthContextType } from "@/lib/auth-context";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 
-// import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+interface RouterContext {
+  auth: AuthContextType;
+}
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: Root,
 });
 

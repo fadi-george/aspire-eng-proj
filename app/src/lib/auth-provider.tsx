@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiClient } from "./api";
 import { AuthContext, type User } from "./auth-context";
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
@@ -13,22 +14,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch("http://localhost:4000/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      await apiClient.post("/api/auth/logout");
     } catch (error) {
       console.error("Logout failed:", error);
     }
     setUser(null);
-    window.location.href = "/login";
+
+    if (!window.location.pathname.includes("/login")) {
+      window.location.href = "/login";
+    }
   };
 
   const getUser = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/auth/me", {
-        credentials: "include",
-      });
+      const response = await apiClient.get("/api/auth/me");
 
       if (response.ok) {
         const user = await response.json();
@@ -37,8 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       throw new Error("Failed to fetch user");
-    } catch (error) {
-      console.error(error);
+    } catch {
+      setUser(null);
       return null;
     }
   };

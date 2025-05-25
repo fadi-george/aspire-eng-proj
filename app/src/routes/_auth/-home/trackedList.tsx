@@ -93,7 +93,6 @@ export const RepositoryList = () => {
     key: "name",
     direction: "asc",
   });
-  console.log(sortBy);
 
   const filteredRepos = filterRepos(repositories ?? [], filter, sortBy);
 

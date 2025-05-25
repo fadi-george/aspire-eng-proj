@@ -13,6 +13,12 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,
+      retry(failureCount, error) {
+        if (error instanceof Error && error.message.includes("401")) {
+          return false;
+        }
+        return failureCount < 3;
+      },
     },
   },
 });
@@ -28,6 +34,7 @@ const router = createRouter({
 });
 
 // Register the router instance for type safety
+// Register things for typesafety
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;

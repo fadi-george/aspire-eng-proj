@@ -1,16 +1,16 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import type { AuthContextType } from "../lib/auth-context";
 
 export const Route = createFileRoute("/_auth")({
-  beforeLoad: async ({ context }) => {
-    const { auth } = context as { auth: AuthContextType };
-    const user = await auth.getUser();
+  beforeLoad: ({ context, location }) => {
+    const { auth } = context;
+    if (auth.user) return;
 
-    if (!user) {
-      throw redirect({
-        to: "/login",
-      });
-    }
+    throw redirect({
+      to: "/login",
+      search: {
+        redirect: location.href,
+      },
+    });
   },
   component: () => <Outlet />,
 });
