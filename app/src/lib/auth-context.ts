@@ -8,6 +8,7 @@ export interface User {
 }
 
 export interface AuthContextType {
+  getCookie: (code: string) => Promise<boolean>;
   getUser: () => Promise<User | null>;
   login: () => void;
   logout: () => void;

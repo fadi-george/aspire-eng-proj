@@ -42,8 +42,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getCookie = async (code: string) => {
+    try {
+      const response = await apiClient.post("/api/auth/github", {
+        code,
+      });
+
+      if (response.ok) {
+        return true;
+      }
+      throw new Error("Failed to exchange code for token");
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ getUser, user, login, logout }}>
+    <AuthContext.Provider value={{ getCookie, getUser, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

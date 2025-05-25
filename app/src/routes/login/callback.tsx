@@ -1,7 +1,4 @@
-import { apiClient } from "@/lib/api";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { toast } from "sonner";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 
 export const Route = createFileRoute("/login/callback")({
@@ -14,41 +11,19 @@ export const Route = createFileRoute("/login/callback")({
       })
       .parse(search);
   },
+  beforeLoad: async ({ search, context }) => {
+    const { code } = search;
+    if (!code) {
+      throw redirect({
+        to: "/login",
+      });
+    }
+
+    await context.auth.getCookie(code);
+    throw redirect({ to: "/login", search: { redirect: search.redirect } });
+  },
 });
 
 function LoginCallback() {
-  const navigate = useNavigate();
-  const { code, redirect } = Route.useSearch();
-
-  useEffect(() => {
-    if (!code) {
-      navigate({ to: "/login" });
-      return;
-    }
-
-    const getToken = async () => {
-      try {
-        const response = await apiClient.post("/api/auth/github", {
-          code,
-        });
-
-        if (response.ok) {
-          const { success } = await response.json();
-          if (success) {
-            navigate({ to: redirect || "/" });
-            return;
-          }
-        }
-        throw new Error("Failed to exchange code for token");
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to login");
-        navigate({ to: "/login" });
-      }
-    };
-
-    getToken();
-  }, [navigate, code, redirect]);
-
-  return null;
+  return "Loading...";
 }

@@ -25,25 +25,24 @@ export const Route = createFileRoute("/login/")({
 });
 
 function RouteComponent() {
-  console.log("RouteComponent");
   const { login } = useAuth();
   return (
-    <div className="flex flex-col items-center h-full">
+    <div className="flex h-full flex-col items-center">
       <div
-        className="fixed top-0 left-0 w-full h-full z-[-1] bg-no-repeat bg-[position:50%_10%] bg-[size:auto_50%]"
+        className="fixed top-0 left-0 z-[-1] h-full w-full bg-[size:auto_50%] bg-[position:50%_10%] bg-no-repeat"
         style={{
           backgroundImage: `url(${BackgroundImg})`,
         }}
       />
-      <div className="relative top-[30%] max-w-[400px] flex flex-col items-center">
-        <h1 className="text-4xl font-bold mb-4">Git Tracker</h1>
-        <p className="text-xl font-medium mb-6 text-center text-gray-500 [text-wrap-style:balance]">
+      <div className="relative top-[30%] flex max-w-[400px] flex-col items-center">
+        <h1 className="mb-4 text-4xl font-bold">Git Tracker</h1>
+        <p className="mb-6 text-center text-xl font-medium text-gray-500 [text-wrap-style:balance]">
           Track your favorite repositories and stay up to date with releases.
         </p>
 
         {/* Login button */}
-        <Button className="w-full max-w-[320px] mx-auto" onClick={login}>
-          <SiGithub fill="white" className="shrink-0 mr-2" />
+        <Button className="mx-auto w-full max-w-[320px]" onClick={login}>
+          <SiGithub fill="white" className="mr-2 shrink-0" />
           Login with GitHub
         </Button>
       </div>
