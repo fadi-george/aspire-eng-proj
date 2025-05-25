@@ -17,11 +17,11 @@ function Root() {
   return (
     <>
       <Toaster richColors position="bottom-right" />
-      <header className="flex justify-between items-center px-3 sm:px-12 max-w-7xl m-auto pt-3 absolute left-0 right-0">
+      <header className="absolute right-0 left-0 m-auto flex min-h-[48px] max-w-7xl items-center justify-between px-3 pt-3 sm:px-12">
         <img src="/aspire.png" alt="logo" className="h-6" />
         {user ? <Button onClick={logout}>Logout</Button> : null}
       </header>
-      <main className="h-screen pb-3 px-3 sm:px-12 max-w-7xl m-auto pt-20">
+      <main className="m-auto h-screen max-w-7xl px-3 pt-20 pb-3 sm:px-12">
         <Outlet />
         {/* <TanStackRouterDevtools /> */}
       </main>

@@ -69,7 +69,7 @@ export const Search = () => {
           }}
         />
         {debouncedSearch.length > 0 && (
-          <CommandList className="absolute right-0 left-0 top-12 bg-white shadow-md border rounded-lg z-100">
+          <CommandList className="absolute top-12 right-0 left-0 z-100 rounded-lg border bg-white shadow-md">
             {!isLoadingRepos && repositories.length === 0 && (
               <CommandEmpty>No repositories found.</CommandEmpty>
             )}
@@ -85,17 +85,17 @@ export const Search = () => {
                     value={`${owner}/${name}`}
                     onSelect={() => handleTrackRepository(repository)}
                   >
-                    <div className="flex items-center gap-2 justify-between w-full">
-                      <div className="flex flex-col overflow-hidden flex-1 ">
+                    <div className="flex w-full items-center justify-between gap-2">
+                      <div className="flex flex-1 flex-col overflow-hidden">
                         <p className="text-sm font-medium">
                           {owner}/{name}
                         </p>
-                        <p className="text-sm text-muted-foreground overflow-ellipsis whitespace-nowrap block overflow-hidden">
+                        <p className="text-muted-foreground block overflow-hidden text-sm overflow-ellipsis whitespace-nowrap">
                           {repository.description}
                         </p>
                       </div>
-                      <div className="ml-auto flex items-center gap-2 text-nowrap overflow-hidden">
-                        <p className="text-sm text-muted-foreground">
+                      <div className="ml-auto flex items-center gap-2 overflow-hidden text-nowrap">
+                        <p className="text-muted-foreground text-sm">
                           {formatNumber(repository.stars, 1)} ★
                         </p>
                       </div>

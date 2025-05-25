@@ -100,7 +100,7 @@ export const RepositoryList = () => {
     <div className="flex flex-1 pt-10">
       <div className="w-full pb-5">
         {/* Header */}
-        <span className="flex items-center gap-2 justify-between pb-2 flex-wrap [view-transition-name:repo-section-header]">
+        <span className="flex flex-wrap items-center justify-between gap-2 pb-2 [view-transition-name:repo-section-header]">
           <h2>Tracked Repositories</h2>
           <div className="flex items-center gap-2">
             <Filters
@@ -146,7 +146,7 @@ export const RepositoryList = () => {
                 );
               })}
               {filteredRepos.length === 0 && (
-                <div className="col-span-full text-center text-lg text-gray-500 pt-6">
+                <div className="col-span-full pt-6 text-center text-lg text-gray-500">
                   No repositories found
                 </div>
               )}
@@ -178,20 +178,20 @@ const LoadingCard = () => {
   return (
     <Card className="gap-1">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 justify-between mt-2">
-          <Skeleton className="w-3/4 h-5" />
-          <Skeleton className="w-[30px] h-5" />
+        <CardTitle className="mt-2 flex items-center justify-between gap-2">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-5 w-[30px]" />
         </CardTitle>
       </CardHeader>
       <CardContent>
         <CardDescription className="mt-2">
-          <div className="flex gap-2 mb-4">
-            <Skeleton className="w-15 h-4" />
-            <Skeleton className="w-17 h-4" />
+          <div className="mb-4 flex gap-2">
+            <Skeleton className="h-4 w-15" />
+            <Skeleton className="h-4 w-17" />
           </div>
           <div>
-            <Skeleton className="w-full h-4 mt-2" />
-            <Skeleton className="w-1/2 h-4 mt-2" />
+            <Skeleton className="mt-2 h-4 w-full" />
+            <Skeleton className="mt-2 h-4 w-1/2" />
           </div>
         </CardDescription>
       </CardContent>
@@ -214,7 +214,7 @@ const RepositoryCard = ({
   return (
     <Card
       key={name}
-      className="gap-1 cursor-pointer"
+      className="cursor-pointer gap-1"
       onClick={() => {
         navigate({
           to: `/repo/${owner}/${name}`,

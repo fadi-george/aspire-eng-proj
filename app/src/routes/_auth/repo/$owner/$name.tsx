@@ -92,8 +92,8 @@ function RouteComponent() {
 
   return (
     <div className="pb-10">
-      <div className="[view-transition-name:repo-section-header] sticky top-0 bg-slate-50 z-1 pt-[10px] mt-[-10px]">
-        <div className="flex items-center justify-between gap-2 pb-2 flex-wrap ">
+      <div className="sticky top-0 z-1 mt-[-10px] bg-slate-50 pt-[10px] [view-transition-name:repo-section-header]">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
           {/* Back button */}
           <span className="flex items-center gap-2">
             <Button
@@ -101,7 +101,7 @@ function RouteComponent() {
               size="icon"
               onClick={() => navigate({ to: "/" })}
             >
-              <ArrowLeft className="!w-6 !h-6" />
+              <ArrowLeft className="!h-6 !w-6" />
             </Button>
             <h1>
               {owner} /{" "}
@@ -117,33 +117,33 @@ function RouteComponent() {
             <RefreshButton isFetching={isRefreshing} onRefresh={refreshRepo} />
           </span>
         </div>
-        <span className="pb-3 pl-[44px] block text-gray-500 whitespace-pre-wrap ">
-          {isLoading ? <Skeleton className="w-[200px] h-4" /> : description}
+        <span className="block pb-3 pl-[44px] whitespace-pre-wrap text-gray-500">
+          {isLoading ? <Skeleton className="h-4 w-[200px]" /> : description}
         </span>
         <hr />
       </div>
 
       <Card
-        className={cn("mt-4 mx-auto max-w-5xl")}
+        className={cn("mx-auto mt-4 max-w-5xl")}
         style={{
           viewTransitionName: `card-${owner}-${name}`,
         }}
       >
         <CardHeader>
-          <CardTitle className="flex justify-between flex-wrap gap-2">
+          <CardTitle className="flex flex-wrap justify-between gap-2">
             <h2>Latest Release</h2>
-            <span className="flex flex-row gap-4 items-center">
+            <span className="flex flex-row items-center gap-4">
               {isLoading ? (
                 <>
-                  <Skeleton className="w-[80px] h-4" />
-                  <Skeleton className="w-[100px] h-4" />
-                  <Skeleton className="w-[100px] h-4" />
+                  <Skeleton className="h-4 w-[80px]" />
+                  <Skeleton className="h-4 w-[100px]" />
+                  <Skeleton className="h-4 w-[100px]" />
                 </>
               ) : (
                 <>
                   {/* Release metadata */}
                   {release_commit && (
-                    <span className="flex items-center gap-1 ml-[-8px]">
+                    <span className="ml-[-8px] flex items-center gap-1">
                       <GitCommitVertical /> {release_commit.slice(0, 7)}
                     </span>
                   )}
@@ -162,22 +162,22 @@ function RouteComponent() {
           {/* Release notes */}
           {isLoading ? (
             <div className="flex flex-col gap-5">
-              <Skeleton className="w-1/4 h-[20px]" />
-              <Skeleton className="w-5/6 h-[20px]" />
-              <Skeleton className="w-full h-[20px]" />
-              <Skeleton className="w-3/4 h-[20px]" />
-              <Skeleton className="w-4/6 h-[20px]" />
+              <Skeleton className="h-[20px] w-1/4" />
+              <Skeleton className="h-[20px] w-5/6" />
+              <Skeleton className="h-[20px] w-full" />
+              <Skeleton className="h-[20px] w-3/4" />
+              <Skeleton className="h-[20px] w-4/6" />
             </div>
           ) : (
             <>
               {release_notes ? (
-                <div className="prose max-w-full markdown-body">
+                <div className="prose markdown-body max-w-full">
                   <Markdown remarkPlugins={[remarkGfm]}>
                     {repository?.release_notes ?? ""}
                   </Markdown>
                 </div>
               ) : (
-                <p className="text-center text-gray-600 text-lg">
+                <p className="text-center text-lg text-gray-600">
                   No release notes found.
                 </p>
               )}
