@@ -13,6 +13,7 @@ import {
   CalendarArrowUp,
   PackageCheck,
 } from "lucide-react";
+import { startTransition } from "react";
 
 export default function Filters({
   filter,
@@ -43,7 +44,9 @@ export default function Filters({
           placeholder="Search repos"
           className="h-9"
           value={filter.search}
-          onValueChange={(value) => setFilter({ ...filter, search: value })}
+          onValueChange={(value) =>
+            startTransition(() => setFilter({ ...filter, search: value }))
+          }
         />
       </Command>
 
@@ -54,7 +57,11 @@ export default function Filters({
             <Button
               size="icon"
               variant={isUnseen ? "default" : "outline"}
-              onClick={() => setFilter({ ...filter, unseen: !isUnseen })}
+              onClick={() =>
+                startTransition(() =>
+                  setFilter({ ...filter, unseen: !isUnseen }),
+                )
+              }
             >
               <PackageCheck />
             </Button>
@@ -73,7 +80,9 @@ export default function Filters({
               size="icon"
               variant="outline"
               onClick={() =>
-                setSortBy({ key: "name", direction: isAsc ? "desc" : "asc" })
+                startTransition(() =>
+                  setSortBy({ key: "name", direction: isAsc ? "desc" : "asc" }),
+                )
               }
             >
               {isAsc && sortKey === "name" ? <ArrowDownAZ /> : <ArrowUpAZ />}
@@ -93,10 +102,12 @@ export default function Filters({
               size="icon"
               variant="outline"
               onClick={() =>
-                setSortBy({
-                  key: "published_at",
-                  direction: isAsc ? "desc" : "asc",
-                })
+                startTransition(() =>
+                  setSortBy({
+                    key: "published_at",
+                    direction: isAsc ? "desc" : "asc",
+                  }),
+                )
               }
             >
               {isAsc && sortKey === "published_at" ? (

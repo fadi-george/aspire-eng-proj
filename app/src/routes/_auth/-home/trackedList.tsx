@@ -23,7 +23,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { X } from "lucide-react";
 import {
   startTransition,
-  useEffect,
   useState,
   unstable_ViewTransition as ViewTransition,
 } from "react";
@@ -43,7 +42,6 @@ export const RepositoryList = () => {
     queryKey: ["trackedRepositories"],
     queryFn: getTrackedRepositories,
   });
-  const [filteredRepos, setFilteredRepos] = useState<TrackedRepository[]>([]);
 
   const [deleteRepoInfo, setDeleteRepoInfo] = useState<{
     name: string;
@@ -65,11 +63,7 @@ export const RepositoryList = () => {
     direction: "asc",
   });
 
-  useEffect(() => {
-    startTransition(() => {
-      setFilteredRepos(filterRepos(repositories ?? [], filter, sortBy));
-    });
-  }, [filter, repositories, sortBy]);
+  const filteredRepos = filterRepos(repositories ?? [], filter, sortBy);
 
   // untrack a repo
   const { mutate: untrackRepo, isPending: isRemovingRepo } = useMutation({
