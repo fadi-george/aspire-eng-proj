@@ -1,6 +1,6 @@
-# Aspire Project
+# Git Tracker
 
-Implements project instructor with the goal of tracking GitHub repositories releases and marking releases as seen.
+A project with the goal of tracking GitHub repositories releases and marking releases as seen.
 Frontend is built using: React, Typescript, Vite, Tailwind, ShadCn, Tanstack
 Server is built using: GraphQl Yoga, Hono, Drizzle
 

@@ -45,41 +45,6 @@ export const RepositoryList = () => {
   });
   const [filteredRepos, setFilteredRepos] = useState<TrackedRepository[]>([]);
 
-  // untrack a repo
-  const { mutate: untrackRepo, isPending: isRemovingRepo } = useMutation({
-    mutationFn: ({ repoId }: { repoId: string }) => untrackRepository(repoId),
-    onSuccess: (_, { repoId }) => {
-      queryClient.setQueriesData<TrackedRepository[]>(
-        {
-          queryKey: ["trackedRepositories"],
-        },
-        (data) => {
-          if (!data) return [];
-          return data.filter((repo) => repo.repoId !== repoId);
-        },
-      );
-      setDeleteRepoInfo(null);
-      toast.success("Repository untracked successfully!");
-    },
-  });
-
-  // get latest info for all repos
-  const { mutate: refresh, isPending: isRefreshing } = useMutation({
-    mutationFn: refreshRepositories,
-    onSuccess: async (data) => {
-      refetch();
-      if (data.failedRepos.length > 0) {
-        toast.warning(
-          `Some repositories failed to refresh. Check console for details.`,
-        );
-        console.warn("Failed repositories:", data.failedRepos);
-      }
-    },
-    onError: () => {
-      toast.error("Failed to get latest updates");
-    },
-  });
-
   const [deleteRepoInfo, setDeleteRepoInfo] = useState<{
     name: string;
     owner: string;
@@ -105,6 +70,43 @@ export const RepositoryList = () => {
       setFilteredRepos(filterRepos(repositories ?? [], filter, sortBy));
     });
   }, [filter, repositories, sortBy]);
+
+  // untrack a repo
+  const { mutate: untrackRepo, isPending: isRemovingRepo } = useMutation({
+    mutationFn: ({ repoId }: { repoId: string }) => untrackRepository(repoId),
+    onSuccess: (_, { repoId }) => {
+      queryClient.setQueriesData<TrackedRepository[]>(
+        {
+          queryKey: ["trackedRepositories"],
+        },
+        (data) => {
+          if (!data) return [];
+          return data.filter((repo) => repo.repoId !== repoId);
+        },
+      );
+      startTransition(() => {
+        setDeleteRepoInfo(null);
+      });
+      toast.success("Repository untracked successfully!");
+    },
+  });
+
+  // get latest info for all repos
+  const { mutate: refresh, isPending: isRefreshing } = useMutation({
+    mutationFn: refreshRepositories,
+    onSuccess: async (data) => {
+      refetch();
+      if (data.failedRepos.length > 0) {
+        toast.warning(
+          `Some repositories failed to refresh. Check console for details.`,
+        );
+        console.warn("Failed repositories:", data.failedRepos);
+      }
+    },
+    onError: () => {
+      toast.error("Failed to get latest updates");
+    },
+  });
 
   return (
     <div className="flex flex-1 pt-10">
@@ -141,8 +143,12 @@ export const RepositoryList = () => {
             <>
               {filteredRepos.map((repository) => {
                 const { name, owner, repoId } = repository;
+                // const pendingDelete = deleteRepoInfo?.repoId === repoId;
                 return (
-                  <ViewTransition key={name}>
+                  <ViewTransition
+                    key={name}
+                    // exit={pendingDelete ? "zoom-out" : undefined}
+                  >
                     <RepositoryCard
                       key={name}
                       repository={repository}

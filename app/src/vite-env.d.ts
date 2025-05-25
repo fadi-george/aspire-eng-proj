@@ -13,6 +13,8 @@ declare module "@tanstack/react-router" {
 declare module "react" {
   export const unstable_ViewTransition: React.ComponentType<{
     children: React.ReactNode;
+    enter?: string;
+    exit?: string;
   }>;
 }
 
