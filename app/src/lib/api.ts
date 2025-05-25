@@ -7,8 +7,18 @@ class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  async fetch(endpoint: string, { headers, ...options }: RequestInit = {}) {
-    const url = `${this.baseUrl}${endpoint}`;
+  getBaseUrl() {
+    return this.baseUrl;
+  }
+
+  async fetch(
+    endpoint: URL | RequestInfo,
+    { headers, ...options }: RequestInit = {},
+  ) {
+    const url =
+      typeof endpoint === "string"
+        ? `${this.baseUrl}${endpoint}`
+        : endpoint.toString();
 
     const response = await fetch(url, {
       credentials: "include",

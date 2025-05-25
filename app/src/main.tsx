@@ -29,7 +29,7 @@ const router = createRouter({
   defaultViewTransition: true,
   context: {
     auth: undefined!, // This will be set after we wrap the app in an AuthProvider
-    queryClient,
+    // queryClient,
   },
 });
 

@@ -1,11 +1,12 @@
 import type { Mutation, Query } from "@/types/graphql";
 import { gql, GraphQLClient } from "graphql-request";
+import { apiClient } from "./api";
 
 // Create a GraphQL client instance
 export const graphqlClient = new GraphQLClient(
-  "http://localhost:4000/graphql",
+  `${apiClient.getBaseUrl()}/graphql`,
   {
-    credentials: "include",
+    fetch: apiClient.fetch,
   },
 );
 
