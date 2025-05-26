@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, lt } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, lt } from "drizzle-orm";
 import webpush from "web-push";
 import db from "./db";
 import {
@@ -27,10 +27,11 @@ const sendBatchedPushNotification = async (
     publishedAt: Date;
   }[]
 ) => {
+  console.log("sending push notification", { subscription, releases });
   try {
     const releaseCount = releases.length;
     let title: string;
-    let body: string;
+    let body: string = "";
     let url = "/";
 
     if (releases.length === 1) {
@@ -40,12 +41,9 @@ const sendBatchedPushNotification = async (
       url = `/repo/${release.owner}/${release.name}`;
     } else {
       title = `🚀 ${releaseCount} new releases available!`;
-
       const repoNames = releases.slice(0, 3).map((r) => `${r.name}`);
-      body =
-        releaseCount > 3
-          ? `${repoNames.join(", ")} and ${releaseCount - 3} more`
-          : repoNames.join(", ");
+      body = `Repos: ${repoNames.join(", ")}`;
+      if (releaseCount > 3) body += ` and ${releaseCount - 3} more`;
     }
 
     await webpush.sendNotification(
@@ -79,12 +77,25 @@ const sendBatchedPushNotification = async (
 
 // send notification for users who have not seen latest releases
 export const batchPushNotifications = async () => {
-  const usersWithNewReleases = await db
+  // get 1 subscriptions per user
+  const userSubscriptions = await db
     .selectDistinctOn([users.id], {
       userId: users.id,
       endpoint: pushSubscriptions.endpoint,
       authKey: pushSubscriptions.authKey,
       p256dhKey: pushSubscriptions.p256dhKey,
+    })
+    .from(users)
+    .innerJoin(pushSubscriptions, eq(users.id, pushSubscriptions.userId))
+    .where(eq(pushSubscriptions.isActive, true));
+
+  const userIds = userSubscriptions.map((sub) => sub.userId);
+  if (userIds.length === 0) return;
+
+  // get all repos that have new releases and user has seen at least one release for each repo
+  const userRepos = await db
+    .select({
+      userId: users.id,
       owner: repositories.owner,
       name: repositories.name,
       publishedAt: repositories.publishedAt,
@@ -96,14 +107,13 @@ export const batchPushNotifications = async () => {
       eq(trackedRepositories.repoId, repositories.repoId)
     )
     .innerJoin(users, eq(trackedRepositories.userId, users.id))
-    .innerJoin(pushSubscriptions, eq(users.id, pushSubscriptions.userId))
     .where(
       and(
+        inArray(users.id, userIds),
         isNotNull(repositories.publishedAt),
         isNotNull(repositories.releaseTag),
         isNotNull(trackedRepositories.lastSeenAt),
-        lt(trackedRepositories.lastSeenAt, repositories.publishedAt),
-        eq(pushSubscriptions.isActive, true)
+        lt(trackedRepositories.lastSeenAt, repositories.publishedAt)
       )
     );
 
@@ -125,28 +135,21 @@ export const batchPushNotifications = async () => {
     }
   >();
 
-  for (const user of usersWithNewReleases) {
-    const userId = user.userId;
+  for (const sub of userSubscriptions) {
+    userReleases.set(sub.userId, {
+      subscription: sub,
+      releases: [],
+    });
+  }
 
-    if (!userReleases.has(userId)) {
-      userReleases.set(userId, {
-        subscription: {
-          endpoint: user.endpoint,
-          authKey: user.authKey,
-          p256dhKey: user.p256dhKey,
-        },
-        releases: [],
-      });
-    }
-
-    const userData = userReleases.get(userId)!;
-
-    if (user.releaseTag && user.publishedAt) {
+  for (const repo of userRepos) {
+    const userData = userReleases.get(repo.userId)!;
+    if (repo.releaseTag && repo.publishedAt) {
       userData.releases.push({
-        owner: user.owner,
-        name: user.name,
-        releaseTag: user.releaseTag,
-        publishedAt: user.publishedAt,
+        owner: repo.owner,
+        name: repo.name,
+        releaseTag: repo.releaseTag,
+        publishedAt: repo.publishedAt,
       });
     }
   }
