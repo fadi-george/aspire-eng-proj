@@ -11,6 +11,13 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+interface PushNotificationData {
+  title: string;
+  body: string;
+  data: {
+    url: string;
+  };
+}
 // Handle push notifications (for future use)
 self.addEventListener("push", (event) => {
   console.log("Push notification received", event, {
@@ -18,16 +25,15 @@ self.addEventListener("push", (event) => {
     origin: self.location.origin,
   });
   if (event.data) {
-    const data = event.data.json();
+    const data: PushNotificationData = event.data.json();
+    const { url } = data.data;
 
     const options = {
       body: data.body,
-      icon: data.icon || "/favicon.ico",
+      icon: "/favicon.ico",
       badge: "/badge-72x72.png",
       data: {
-        dateOfArrival: Date.now(),
-        primaryKey: 1,
-        url: `${self.location.origin}/${data.owner}/${data.name}`,
+        url: `${self.location.origin}${url}`,
       },
     };
     event.waitUntil(self.registration.showNotification(data.title, options));
