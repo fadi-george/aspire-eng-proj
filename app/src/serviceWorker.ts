@@ -20,10 +20,6 @@ interface PushNotificationData {
 }
 // Handle push notifications (for future use)
 self.addEventListener("push", (event) => {
-  console.log("Push notification received", event, {
-    href: self.location.href,
-    origin: self.location.origin,
-  });
   if (event.data) {
     const data: PushNotificationData = event.data.json();
     const { url } = data.data;
@@ -42,8 +38,6 @@ self.addEventListener("push", (event) => {
 
 // Handle notification clicks
 self.addEventListener("notificationclick", (event) => {
-  console.log("Notification clicked", event);
   event.notification.close();
-
   event.waitUntil(self.clients.openWindow(event.notification.data.url));
 });

@@ -14,20 +14,39 @@ Run `bun install` in app and server folders.
 
 ### Server
 
-Create an `.env` file and add variables as seen in the `.env.example` file. To limit quota errors, generate a [GitHub person access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token).
+#### Env Vars
 
-The login with GitHub logic will require setting up an [Oauth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app). Create one and save client id and client secret to the .env file.
+Create an `.env` file and add variables as seen in the `.env.example` file.
 
-Create or use a Postgres DB instance and save the DB url. Can use a provider like Supabase.
+- **GITHUB_PAT**: To limit quota errors, generate a [GitHub person access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token).
 
-You can generate a jwt secret like so: `openssl rand -hex 32`
+- **GITHUB_CLIENT_ID , GITHUB_CLIENT_SECRET**: The login with GitHub logic will require setting up an [Oauth app](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app). Create one and save client id and client secret to the .env file.
+
+- **DATABASE_URL**: Create or use a Postgres DB instance and save the DB url. Can use a provider like Supabase.
+
+- **JWT_SECRET**: You can generate a jwt secret like so:
+
+  ```
+  openssl rand -hex 32
+  ```
+
+- **VAPID_PRIVATE_KEY , VAPID_PUBLIC_KEY**: For push notifications, you will need to generate vapid keys like so:
+  ```
+  web-push generate-vapid-keys --json
+  ```
+
+#### Migrations
 
 Now run `bun run db:generate` to create migration files and `bun run db:migrate` to perform the migration and setup the tables.
 
 ### Frontend / App
 
+#### Env Vars
+
 Create an `.env` and set the proper fields as indicated by `.env.example`.
-The client id should be same as the one in the server env file.
+
+- **VITE_GITHUB_CLIENT_ID**: The client id should be same as the one in the server env file.
+- **VITE_VAPID_PUBLIC_KEY**: Reuse the vapid public key from the server env vars.
 
 ## Running
 
@@ -47,6 +66,7 @@ You could also open two terminal instances and run `bun run dev` for the `/app` 
 - Clicking the refresh button on the list page will refresh all repos with their latest information (tag, publish date, etc.) and even the owner and name should that change. Refreshing on the release notes page will refresh the current repo.
 - User can search repos by owner or name, sort by name or published_at date, or toggle filter for new releases.
 - A cron job runs every 15 minutes to fetch the latest info for each repo.
+- Can subscribe to web push notifications. Notifications are batched if multiple tracked repos have new releases. There is a cool-down of 3 days after notifications sent.
 
 Tradeoffs:
 
@@ -55,4 +75,4 @@ Tradeoffs:
 
 ## Future Improvements
 
-Could have setup Docker for a local Postgres DB. Given more time, I would have liked to implement a webhook strategy for fetching release information and not rely on some arbitrary cron timer. I would have also liked to implement a notifications for new releases.
+Could have setup Docker for a local Postgres DB. Given more time, I would have liked to implement a webhook strategy for fetching release information and not rely on some arbitrary cron timer.

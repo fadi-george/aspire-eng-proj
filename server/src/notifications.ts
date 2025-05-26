@@ -30,7 +30,6 @@ const sendBatchedPushNotification = async (
     publishedAt: Date;
   }[]
 ) => {
-  console.log("sending push notification", { subscription, releases });
   try {
     const releaseCount = releases.length;
     let title: string;
