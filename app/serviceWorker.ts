@@ -1,6 +1,3 @@
-/// <reference no-default-lib="true"/>
-/// <reference lib="webworker" />
-
 declare const self: ServiceWorkerGlobalScope;
 
 self.addEventListener("install", () => {

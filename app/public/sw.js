@@ -1,1 +1,1 @@
-import "../src/serviceWorker.ts";
+import "../serviceWorker.ts";
