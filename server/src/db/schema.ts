@@ -4,6 +4,7 @@ import {
   boolean,
   index,
   integer,
+  pgEnum,
   pgTable,
   serial,
   text,
@@ -78,7 +79,7 @@ export const pushSubscriptions = pgTable(
     authKey: text("auth_key").notNull(),
     p256dhKey: text("p256dh_key").notNull(),
     expirationTime: timestamp("expiration_time"),
-    userAgent: text("user_agent"), // Optional: track device/browser
+    userAgent: text("user_agent"),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -87,6 +88,35 @@ export const pushSubscriptions = pgTable(
     unique("unique_user_endpoint").on(table.userId, table.endpoint),
     index("user_id_idx").on(table.userId),
     index("endpoint_idx").on(table.endpoint),
+  ]
+);
+
+export const notificationTypeEnum = pgEnum("notification_type", ["releases"]);
+export const notificationSettings = pgTable(
+  "notification_settings",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, {
+        onDelete: "cascade",
+      }),
+    notificationType: notificationTypeEnum("notification_type")
+      .notNull()
+      .default("releases"),
+    lastSentAt: timestamp("last_sent_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    unique("unique_user_notification_type").on(
+      table.userId,
+      table.notificationType
+    ),
+    index("user_notification_type_idx").on(
+      table.userId,
+      table.notificationType
+    ),
   ]
 );
 
@@ -123,3 +153,13 @@ export const usersRelations = relations(users, ({ many }) => ({
   pushSubscriptions: many(pushSubscriptions),
   trackedRepositories: many(trackedRepositories),
 }));
+
+export const notificationSettingsRelations = relations(
+  notificationSettings,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [notificationSettings.userId],
+      references: [users.id],
+    }),
+  })
+);

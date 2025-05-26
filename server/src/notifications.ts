@@ -1,7 +1,9 @@
-import { and, eq, inArray, isNotNull, lt } from "drizzle-orm";
+import { subDays } from "date-fns";
+import { and, eq, inArray, isNotNull, isNull, lt, or } from "drizzle-orm";
 import webpush from "web-push";
 import db from "./db";
 import {
+  notificationSettings,
   pushSubscriptions,
   repositories,
   trackedRepositories,
@@ -16,6 +18,7 @@ webpush.setVapidDetails(
 
 const sendBatchedPushNotification = async (
   subscription: {
+    userId: number;
     endpoint: string;
     authKey: string;
     p256dhKey: string;
@@ -62,6 +65,25 @@ const sendBatchedPushNotification = async (
         },
       })
     );
+
+    // Update notification settings after successful send
+    await db
+      .insert(notificationSettings)
+      .values({
+        userId: subscription.userId,
+        notificationType: "releases",
+        lastSentAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [
+          notificationSettings.userId,
+          notificationSettings.notificationType,
+        ],
+        set: {
+          lastSentAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
   } catch (error) {
     if (error instanceof Error && "statusCode" in error) {
       if (error.statusCode === 410 || error.statusCode === 404) {
@@ -77,6 +99,8 @@ const sendBatchedPushNotification = async (
 
 // send notification for users who have not seen latest releases
 export const batchPushNotifications = async () => {
+  const threeDaysAgo = subDays(new Date(), 3);
+
   // get 1 subscriptions per user
   const userSubscriptions = await db
     .selectDistinctOn([users.id], {
@@ -87,7 +111,22 @@ export const batchPushNotifications = async () => {
     })
     .from(users)
     .innerJoin(pushSubscriptions, eq(users.id, pushSubscriptions.userId))
-    .where(eq(pushSubscriptions.isActive, true));
+    .leftJoin(
+      notificationSettings,
+      and(
+        eq(notificationSettings.userId, users.id),
+        eq(notificationSettings.notificationType, "releases")
+      )
+    )
+    .where(
+      and(
+        eq(pushSubscriptions.isActive, true),
+        or(
+          isNull(notificationSettings.lastSentAt),
+          lt(notificationSettings.lastSentAt, threeDaysAgo)
+        )
+      )
+    );
 
   const userIds = userSubscriptions.map((sub) => sub.userId);
   if (userIds.length === 0) return;
@@ -122,6 +161,7 @@ export const batchPushNotifications = async () => {
     number,
     {
       subscription: {
+        userId: number;
         endpoint: string;
         authKey: string;
         p256dhKey: string;
