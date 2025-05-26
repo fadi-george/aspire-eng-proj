@@ -6,6 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { debounce } from "@/lib/general";
 import {
   ArrowDownAZ,
   ArrowUpAZ,
@@ -13,7 +14,7 @@ import {
   CalendarArrowUp,
   PackageCheck,
 } from "lucide-react";
-import { startTransition } from "react";
+import { startTransition, type Dispatch, type SetStateAction } from "react";
 
 export default function Filters({
   filter,
@@ -22,7 +23,7 @@ export default function Filters({
   setSortBy,
 }: {
   filter: { search: string; unseen: boolean };
-  setFilter: (filter: { search: string; unseen: boolean }) => void;
+  setFilter: Dispatch<SetStateAction<{ search: string; unseen: boolean }>>;
   sortBy: {
     key: "name" | "published_at" | null;
     direction: "asc" | "desc" | null;
@@ -36,6 +37,10 @@ export default function Filters({
   const isAsc = sortBy.direction === "asc";
   const isUnseen = filter.unseen;
 
+  const handleSearch = debounce((value: string) => {
+    startTransition(() => setFilter((prev) => ({ ...prev, search: value })));
+  });
+
   return (
     <div className="flex items-center gap-2">
       {/* Search */}
@@ -43,10 +48,7 @@ export default function Filters({
         <CommandInput
           placeholder="Search repos"
           className="h-9"
-          value={filter.search}
-          onValueChange={(value) =>
-            startTransition(() => setFilter({ ...filter, search: value }))
-          }
+          onValueChange={handleSearch}
         />
       </Command>
 

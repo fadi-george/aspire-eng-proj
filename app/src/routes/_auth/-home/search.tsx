@@ -16,7 +16,7 @@ import { useSearchRepositories, useTrackRepository } from "./hooks";
 
 export const Search = () => {
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 500);
+  const debouncedSearch = useDebounce(search);
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
 

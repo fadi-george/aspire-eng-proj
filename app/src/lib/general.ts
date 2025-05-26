@@ -23,3 +23,15 @@ export const hasNewRelease = ({
   if (!last_seen_at) return true;
   return Date.parse(published_at) > Date.parse(last_seen_at);
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function debounce<T extends (...args: any[]) => void>(
+  func: T,
+  delay: number = 350,
+): T {
+  let timeout: NodeJS.Timeout;
+  return ((...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), delay);
+  }) as T;
+}
