@@ -20,7 +20,7 @@ export const registerServiceWorker = () => {
         type: "module",
       })
       .then(() => {
-        console.log("Service Worker registered");
+        console.info("Service Worker registered");
       })
       .catch((error) => {
         console.error("Service Worker registration failed", error);
@@ -30,9 +30,7 @@ export const registerServiceWorker = () => {
 
 export const urlBase64ToUint8Array = (base64String: string) => {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, "+")
-    .replace(/_/g, "/");
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
 
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
@@ -46,11 +44,14 @@ export const urlBase64ToUint8Array = (base64String: string) => {
 export const subscribeUserToPush =
   async (): Promise<UserPushSubscription | null> => {
     try {
-      // register service worker
-      const registration = await navigator.serviceWorker.register("/sw.js", {
-        scope: "/",
-        type: "module",
-      });
+      const registration = await navigator.serviceWorker.ready;
+
+      // check if already subscribed
+      const existingSubscription =
+        await registration.pushManager.getSubscription();
+      if (existingSubscription) {
+        return null;
+      }
 
       // subscribe to push
       const subscribeOptions = {
@@ -63,10 +64,6 @@ export const subscribeUserToPush =
         await registration.pushManager.subscribe(subscribeOptions);
 
       // save to db
-      console.log({
-        j1: pushSubscription.toJSON(),
-        j2: JSON.stringify(pushSubscription),
-      });
       const response = await apiClient.post("/api/notifications/subscribe", {
         subscription: pushSubscription.toJSON(),
       });
@@ -94,10 +91,15 @@ export const usePromptForNotifications = () => {
       return subscribeUserToPush().then((data) => {
         if (data) {
           setUser((user) => {
-            const hasSubscription = user?.pushSubscriptions.some(
+            if (!user) return user;
+
+            // subscription already exists
+            const hasSubscription = user.pushSubscriptions.some(
               (subscription) => subscription.endpoint === data.endpoint,
             );
-            if (hasSubscription || !user) return user;
+            if (hasSubscription) return user;
+
+            // add new subscription
             return {
               ...user,
               pushSubscriptions: [...(user?.pushSubscriptions || []), data],
@@ -137,7 +139,7 @@ export const usePromptForNotifications = () => {
 
     // if permission was revoked
     if (!askedForNotifications && Notification.permission === "denied") {
-      console.log(
+      console.warn(
         "Notifications were disabled. Reset your permissions to allow notifications.",
       );
     }

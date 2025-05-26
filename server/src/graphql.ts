@@ -399,7 +399,7 @@ export const yoga = createYoga<Context>({
           ctx
         ): Promise<Mutation["refreshRepository"]> => {
           const userId = ctx.userId;
-          const repo = (await refreshRepository(repoId))[0];
+          const repo = await refreshRepository(repoId);
           if (!repo) {
             throw new Error("Repository not found");
           }
@@ -453,7 +453,7 @@ export const refreshRepository = async (id: string) => {
   const repoId = BigInt(id);
   const repoInfo = await fetchRepositoryInfo(BigInt(repoId));
 
-  return db
+  const result = await db
     .update(repositories)
     .set({
       name: repoInfo.name,
@@ -466,4 +466,5 @@ export const refreshRepository = async (id: string) => {
     })
     .where(eq(repositories.repoId, repoId))
     .returning();
+  return result[0]!;
 };

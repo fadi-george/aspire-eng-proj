@@ -112,5 +112,14 @@ export const trackedRepositoriesRelations = relations(
       fields: [trackedRepositories.repoId],
       references: [repositories.repoId],
     }),
+    user: one(users, {
+      fields: [trackedRepositories.userId],
+      references: [users.id],
+    }),
   })
 );
+
+export const usersRelations = relations(users, ({ many }) => ({
+  pushSubscriptions: many(pushSubscriptions),
+  trackedRepositories: many(trackedRepositories),
+}));
