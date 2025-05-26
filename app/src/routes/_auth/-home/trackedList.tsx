@@ -11,14 +11,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { hasNewRelease } from "@/lib/general";
-import {
-  getTrackedRepositories,
-  refreshRepositories,
-  untrackRepository,
-} from "@/lib/graphql";
-import type { TrackedRepository } from "@/types/graphql";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getTrackedRepositories } from "@/lib/graphql";
+import type { TrackedRepository } from "@/shared/types/graphql";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { X } from "lucide-react";
 import {
@@ -26,12 +21,11 @@ import {
   useState,
   unstable_ViewTransition as ViewTransition,
 } from "react";
-import { toast } from "sonner";
 import Filters from "./filters";
 import { filterRepos } from "./helper";
+import { useRefreshRepositories, useUntrackRepo } from "./hooks";
 
 export const RepositoryList = () => {
-  const queryClient = useQueryClient();
   const {
     data: repositories,
     isFetched,
@@ -66,39 +60,18 @@ export const RepositoryList = () => {
   const filteredRepos = filterRepos(repositories ?? [], filter, sortBy);
 
   // untrack a repo
-  const { mutate: untrackRepo, isPending: isRemovingRepo } = useMutation({
-    mutationFn: ({ repoId }: { repoId: string }) => untrackRepository(repoId),
-    onSuccess: (_, { repoId }) => {
-      queryClient.setQueriesData<TrackedRepository[]>(
-        {
-          queryKey: ["trackedRepositories"],
-        },
-        (data) => {
-          if (!data) return [];
-          return data.filter((repo) => repo.repoId !== repoId);
-        },
-      );
+  const { mutate: untrackRepo, isPending: isRemovingRepo } = useUntrackRepo({
+    onSuccess: () => {
       startTransition(() => {
         setDeleteRepoInfo(null);
       });
-      toast.success("Repository untracked successfully!");
     },
   });
 
   // get latest info for all repos
-  const { mutate: refresh, isPending: isRefreshing } = useMutation({
-    mutationFn: refreshRepositories,
-    onSuccess: async (data) => {
+  const { mutate: refresh, isPending: isRefreshing } = useRefreshRepositories({
+    onSuccess: () => {
       refetch();
-      if (data.failedRepos.length > 0) {
-        toast.warning(
-          `Some repositories failed to refresh. Check console for details.`,
-        );
-        console.warn("Failed repositories:", data.failedRepos);
-      }
-    },
-    onError: () => {
-      toast.error("Failed to get latest updates");
     },
   });
 
@@ -222,7 +195,6 @@ const RepositoryCard = ({
 
   const { owner, name, published_at, release_tag, last_seen_at, repoId } =
     repository;
-  const isNewRelease = hasNewRelease({ last_seen_at, published_at });
   return (
     <Card
       key={name}
@@ -242,7 +214,13 @@ const RepositoryCard = ({
           <span className="flex-1 truncate" title={name}>
             {name}
           </span>
-          {isNewRelease && <MarkSeenButton repoId={repoId} />}
+          <MarkSeenButton
+            published_at={published_at}
+            last_seen_at={last_seen_at}
+            repoId={repoId}
+            owner={owner}
+            name={name}
+          />
           <Button
             variant="ghost"
             size="icon"

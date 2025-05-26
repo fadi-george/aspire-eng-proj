@@ -4,7 +4,6 @@ import { RefreshButton } from "@/components/refreshButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { hasNewRelease } from "@/lib/general";
 import { getTrackedRepository, refreshRepository } from "@/lib/graphql";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -87,7 +86,6 @@ function RouteComponent() {
     release_commit: "",
   };
 
-  const isNewRelease = hasNewRelease({ last_seen_at, published_at });
   const release_notes = repository?.release_notes ?? "";
 
   return (
@@ -113,7 +111,13 @@ function RouteComponent() {
 
           {/* Mark as seen and refresh latest button */}
           <span className="flex items-center gap-2">
-            {isNewRelease && <MarkSeenButton repoId={repoId} />}
+            <MarkSeenButton
+              last_seen_at={last_seen_at}
+              name={name}
+              owner={owner}
+              published_at={published_at}
+              repoId={repoId}
+            />
             <RefreshButton isFetching={isRefreshing} onRefresh={refreshRepo} />
           </span>
         </div>

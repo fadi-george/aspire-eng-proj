@@ -9,9 +9,9 @@ export const PackageTag = ({
   published_at,
   last_seen_at,
 }: {
-  release_tag?: string | null;
-  published_at?: string | null;
-  last_seen_at?: string | null;
+  release_tag: string | null;
+  published_at: string | null;
+  last_seen_at: string | null;
 }) => {
   const isNewRelease = hasNewRelease({
     last_seen_at,
@@ -27,7 +27,7 @@ export const PackageTag = ({
         <Package />
         {release_tag}
         {isNewRelease && (
-          <Badge className="border-yellow-500 bg-yellow-100 text-yellow-800 rounded-lg leading-[1.2] ">
+          <Badge className="rounded-lg border-yellow-500 bg-yellow-100 leading-[1.2] text-yellow-800">
             New
           </Badge>
         )}

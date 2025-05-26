@@ -16,8 +16,8 @@ export const hasNewRelease = ({
   last_seen_at,
   published_at,
 }: {
-  last_seen_at?: string | null;
-  published_at?: string | null;
+  last_seen_at: string | null;
+  published_at: string | null;
 }) => {
   if (!published_at) return false;
   if (!last_seen_at) return true;

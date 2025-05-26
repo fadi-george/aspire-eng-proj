@@ -1,5 +1,5 @@
 import { hasNewRelease } from "@/lib/general";
-import type { TrackedRepository } from "@/types/graphql";
+import type { TrackedRepository } from "@/shared/types/graphql";
 
 export const filterRepos = (
   repositories: TrackedRepository[],

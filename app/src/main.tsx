@@ -5,6 +5,7 @@ import { AuthProvider } from "./lib/auth-provider";
 import "./styles/index.css";
 
 // Import the generated route tree
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useAuth } from "./lib/auth";
 import { routeTree } from "./routeTree.gen";
 
@@ -48,11 +49,13 @@ function InnerApp() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <InnerApp />
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <InnerApp />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

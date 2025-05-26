@@ -1,4 +1,4 @@
-import type { Mutation, Query } from "@/types/graphql";
+import type { Mutation, Query } from "@/shared/types/graphql";
 import { gql, GraphQLClient } from "graphql-request";
 import { apiClient } from "./api";
 
@@ -111,7 +111,7 @@ export const markRepositoryAsSeen = async (repoId: string) => {
   const mutation = gql`
     mutation MarkRepositoryAsSeen($repoId: String!) {
       markRepositoryAsSeen(repoId: $repoId) {
-        lastSeenAt
+        last_seen_at
       }
     }
   `;

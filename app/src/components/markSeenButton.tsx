@@ -1,32 +1,26 @@
-import { markRepositoryAsSeen } from "@/lib/graphql";
-import type { TrackedRepository } from "@/types/graphql";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { hasNewRelease } from "@/lib/general";
+import { useMarkRepoAsSeen } from "@/routes/_auth/-home/hooks";
 import { useState } from "react";
 import { Button } from "./ui/button";
 
-export const MarkSeenButton = ({ repoId }: { repoId: string }) => {
+export const MarkSeenButton = ({
+  published_at,
+  last_seen_at,
+  repoId,
+  owner,
+  name,
+}: {
+  published_at: string | null;
+  last_seen_at: string | null;
+  repoId: string;
+  owner: string;
+  name: string;
+}) => {
   const [isFetching, setIsFetching] = useState(false);
-  const queryClient = useQueryClient();
+  const { mutateAsync: markAsSeen } = useMarkRepoAsSeen({ owner, name });
 
-  const { mutateAsync: markAsSeen } = useMutation({
-    mutationFn: ({ repoId }: { repoId: string }) =>
-      markRepositoryAsSeen(repoId),
-    onSuccess: (response, { repoId }) => {
-      queryClient.setQueriesData<TrackedRepository[]>(
-        {
-          queryKey: ["trackedRepositories"],
-        },
-        (data) => {
-          if (!data) return [];
-          return data.map((repo) =>
-            repo.repoId === repoId
-              ? { ...repo, last_seen_at: response.lastSeenAt }
-              : repo,
-          );
-        },
-      );
-    },
-  });
+  const isNewRelease = hasNewRelease({ last_seen_at, published_at });
+  if (!isNewRelease) return null;
 
   return (
     <Button

@@ -1,3 +1,4 @@
+import { Mutation, Query } from "@/shared/types/graphql";
 import {
   createInlineSigningKeyProvider,
   extractFromCookie,
@@ -74,9 +75,9 @@ async function fetchRepositoryInfo(id: bigint) {
     owner,
     id: repoInfo.data.id,
     description: repoInfo.data.description,
-    releaseTag: releaseInfo?.data.tag_name,
-    publishedAt: releaseInfo?.data.published_at,
-    releaseNotes: releaseInfo?.data.body,
+    releaseTag: releaseInfo?.data.tag_name || null,
+    publishedAt: releaseInfo?.data.published_at || null,
+    releaseNotes: releaseInfo?.data.body || null,
     releaseCommit: commit,
   };
 }
@@ -122,7 +123,7 @@ export const yoga = createYoga<Context>({
       }
 
       type MarkRepositoryAsSeenResponse {
-        lastSeenAt: String!
+        last_seen_at: String!
       }
 
       type FailedRepository {
@@ -153,7 +154,10 @@ export const yoga = createYoga<Context>({
     `,
     resolvers: {
       Query: {
-        searchRepositories: async (_, { query, limit }) => {
+        searchRepositories: async (
+          _,
+          { query, limit }
+        ): Promise<Query["searchRepositories"]> => {
           const response = await octokit.rest.search.repos({
             q: `${query} in:name has:owner`,
             per_page: limit,
@@ -169,7 +173,11 @@ export const yoga = createYoga<Context>({
             owner: repo.owner!.login,
           }));
         },
-        getTrackedRepositories: async (_, __, ctx) => {
+        getTrackedRepositories: async (
+          _,
+          __,
+          ctx
+        ): Promise<Query["getTrackedRepositories"]> => {
           const userId = ctx.userId;
 
           const trackedRepos = await db.query.trackedRepositories.findMany({
@@ -185,12 +193,17 @@ export const yoga = createYoga<Context>({
             name: trackedRepo.repository.name,
             description: trackedRepo.repository.description,
             owner: trackedRepo.repository.owner,
-            published_at: trackedRepo.repository.publishedAt?.toISOString(),
+            published_at:
+              trackedRepo.repository.publishedAt?.toISOString() || null,
             release_tag: trackedRepo.repository.releaseTag,
-            last_seen_at: trackedRepo.lastSeenAt?.toISOString(),
+            last_seen_at: trackedRepo.lastSeenAt?.toISOString() || null,
           }));
         },
-        getTrackedRepository: async (_, { owner, name }, ctx) => {
+        getTrackedRepository: async (
+          _,
+          { owner, name },
+          ctx
+        ): Promise<Query["getTrackedRepository"]> => {
           const userId = ctx.userId;
           const repo = await db.query.repositories.findFirst({
             where: and(
@@ -220,7 +233,7 @@ export const yoga = createYoga<Context>({
             name: repoInfo.name,
             owner: repoInfo.owner,
             published_at: repoInfo.publishedAt,
-            last_seen_at: trackedRepo.lastSeenAt?.toISOString(),
+            last_seen_at: trackedRepo.lastSeenAt?.toISOString() || null,
             release_tag: repoInfo.releaseTag,
             release_notes: repoInfo.releaseNotes,
             release_commit: repoInfo.releaseCommit,
@@ -228,7 +241,11 @@ export const yoga = createYoga<Context>({
         },
       },
       Mutation: {
-        trackRepository: async (_, { repoId: id }: { repoId: string }, ctx) => {
+        trackRepository: async (
+          _,
+          { repoId: id }: { repoId: string },
+          ctx
+        ): Promise<Mutation["trackRepository"]> => {
           const userId = ctx.userId;
           const repoId = BigInt(id);
 
@@ -282,12 +299,16 @@ export const yoga = createYoga<Context>({
             name: repo.name,
             owner: repo.owner,
             description: repo.description,
-            published_at: repo.publishedAt?.toISOString(),
+            published_at: repo.publishedAt?.toISOString() || null,
             release_tag: repo.releaseTag,
             last_seen_at: null,
           };
         },
-        untrackRepository: async (_, { repoId }, ctx) => {
+        untrackRepository: async (
+          _,
+          { repoId },
+          ctx
+        ): Promise<Mutation["untrackRepository"]> => {
           const userId = ctx.userId;
 
           const repo = await db.query.repositories.findFirst({
@@ -306,7 +327,11 @@ export const yoga = createYoga<Context>({
               )
             );
         },
-        markRepositoryAsSeen: async (_, { repoId }, ctx) => {
+        markRepositoryAsSeen: async (
+          _,
+          { repoId },
+          ctx
+        ): Promise<Mutation["markRepositoryAsSeen"]> => {
           const userId = ctx.userId;
 
           const repo = await db.query.repositories.findFirst({
@@ -327,9 +352,13 @@ export const yoga = createYoga<Context>({
               )
             );
 
-          return { lastSeenAt: newDate.toISOString() };
+          return { last_seen_at: newDate.toISOString() };
         },
-        refreshRepositories: async (_, __, ctx) => {
+        refreshRepositories: async (
+          _,
+          __,
+          ctx
+        ): Promise<Mutation["refreshRepositories"]> => {
           const userId = ctx.userId;
 
           const trackedRepos = await db.query.trackedRepositories.findMany({
@@ -364,7 +393,11 @@ export const yoga = createYoga<Context>({
             failedRepos,
           };
         },
-        refreshRepository: async (_, { repoId }, ctx) => {
+        refreshRepository: async (
+          _,
+          { repoId },
+          ctx
+        ): Promise<Mutation["refreshRepository"]> => {
           const userId = ctx.userId;
           const repo = (await refreshRepository(repoId))[0];
           if (!repo) {
@@ -386,8 +419,8 @@ export const yoga = createYoga<Context>({
             description: repo.description,
             name: repo.name,
             owner: repo.owner,
-            published_at: repo.publishedAt?.toISOString(),
-            last_seen_at: trackedRepo.lastSeenAt?.toISOString(),
+            published_at: repo.publishedAt?.toISOString() || null,
+            last_seen_at: trackedRepo.lastSeenAt?.toISOString() || null,
             release_tag: repo.releaseTag,
             release_notes: repo.releaseNotes,
             release_commit: repo.releaseCommit,

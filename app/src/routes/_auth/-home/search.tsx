@@ -8,11 +8,11 @@ import {
 } from "@/components/ui/command";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatNumber } from "@/lib/general";
-import { searchRepositories, trackRepository } from "@/lib/graphql";
-import type { Repository, TrackedRepository } from "@/types/graphql";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Repository, TrackedRepository } from "@/shared/types/graphql";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { useSearchRepositories, useTrackRepository } from "./hooks";
 
 export const Search = () => {
   const [search, setSearch] = useState("");
@@ -20,23 +20,10 @@ export const Search = () => {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Example of using the search repositories query
-  const { data: repositories = [], isLoading: isLoadingRepos } = useQuery({
-    queryKey: ["repositories", debouncedSearch],
-    queryFn: () => searchRepositories(debouncedSearch, 5),
-    enabled: !!debouncedSearch,
-  });
+  const { data: repositories = [], isLoading: isLoadingRepos } =
+    useSearchRepositories({ searchTerm: debouncedSearch });
 
-  const { mutateAsync: trackRepo, isPending } = useMutation({
-    mutationFn: ({ id }: { id: string }) => trackRepository(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["trackedRepositories"] });
-      toast.success("Repository tracked successfully!");
-    },
-    onError: (error) => {
-      toast.error(`Failed to track repository: ${error.message}`);
-    },
-  });
+  const { mutateAsync: trackRepo, isPending } = useTrackRepository();
 
   const handleTrackRepository = ({ id }: Repository) => {
     const trackedRepos = queryClient.getQueryData<TrackedRepository[]>([
@@ -49,7 +36,7 @@ export const Search = () => {
     }
 
     setSearch("");
-    trackRepo({ id });
+    trackRepo({ repoId: id });
   };
 
   return (
