@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   index,
   integer,
   pgTable,
@@ -64,10 +65,45 @@ export const trackedRepositories = pgTable(
   (table) => [unique("unique_user_repo").on(table.userId, table.repoId)]
 );
 
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, {
+        onDelete: "cascade",
+      }),
+    endpoint: text("endpoint").notNull(),
+    authKey: text("auth_key").notNull(),
+    p256dhKey: text("p256dh_key").notNull(),
+    expirationTime: timestamp("expiration_time"),
+    userAgent: text("user_agent"), // Optional: track device/browser
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    unique("unique_user_endpoint").on(table.userId, table.endpoint),
+    index("user_id_idx").on(table.userId),
+    index("endpoint_idx").on(table.endpoint),
+  ]
+);
+
 // relations
 export const repositoriesRelations = relations(repositories, ({ many }) => ({
   trackedBy: many(trackedRepositories),
 }));
+
+export const pushSubscriptionsRelations = relations(
+  pushSubscriptions,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [pushSubscriptions.userId],
+      references: [users.id],
+    }),
+  })
+);
 
 export const trackedRepositoriesRelations = relations(
   trackedRepositories,

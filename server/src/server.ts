@@ -1,3 +1,4 @@
+import { zValidator } from "@hono/zod-validator";
 import { Octokit } from "@octokit/rest";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
@@ -5,16 +6,14 @@ import { setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 import { jwt as jwtHono } from "hono/jwt";
 import jwt from "jsonwebtoken";
+import { z } from "zod";
 import db from "./db";
-import { users } from "./db/schema";
+import { pushSubscriptions, users } from "./db/schema";
 import { yoga } from "./graphql";
 
 // Start cron job
+import { UserPushSubscription } from "@/shared/types/subscription";
 import "./cron";
-
-interface JWTPayload {
-  userId: number;
-}
 
 const TOKEN_KEY = "authToken";
 
@@ -25,7 +24,13 @@ const jwtMiddleware = jwtHono({
   },
 });
 
-const app = new Hono();
+const app = new Hono<{
+  Variables: {
+    jwtPayload: {
+      userId: number;
+    };
+  };
+}>();
 
 app.use(
   "/*",
@@ -111,16 +116,19 @@ app.post("/api/auth/github", async (c) => {
 
 app.get("/api/auth/me", jwtMiddleware, async (c) => {
   try {
-    const payload = c.get("jwtPayload") as JWTPayload;
+    const payload = c.get("jwtPayload");
     const user = await db.query.users.findFirst({
       where: eq(users.id, payload.userId),
     });
-
     if (!user) {
       return c.json({ error: "User not found" }, 401);
     }
 
-    return c.json(user);
+    const subscriptions = await db.query.pushSubscriptions.findMany({
+      where: eq(pushSubscriptions.userId, payload.userId),
+    });
+
+    return c.json({ ...user, pushSubscriptions: subscriptions });
   } catch (error: any) {
     return c.json({ error: error.message }, 500);
   }
@@ -136,6 +144,50 @@ app.post("/api/auth/logout", async (c) => {
   });
   return c.json({ success: true });
 });
+
+app.post(
+  "/api/notifications/subscribe",
+  jwtMiddleware,
+  zValidator(
+    "json",
+    z.object({
+      subscription: z.object({
+        endpoint: z.string(),
+        keys: z.object({
+          p256dh: z.string(),
+          auth: z.string(),
+        }),
+        expirationTime: z.number().nullable(),
+      }),
+    })
+  ),
+  async (c) => {
+    const payload = c.get("jwtPayload");
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, payload.userId),
+    });
+    if (!user) {
+      return c.json({ error: "User not found" }, 401);
+    }
+
+    const { subscription } = await c.req.valid("json");
+    const pushSubscription = (await db
+      .insert(pushSubscriptions)
+      .values({
+        userId: user.id,
+        endpoint: subscription.endpoint,
+        p256dhKey: subscription.keys.p256dh,
+        authKey: subscription.keys.auth,
+        expirationTime: subscription.expirationTime
+          ? new Date(subscription.expirationTime)
+          : null,
+        userAgent: c.req.header("User-Agent"),
+      })
+      .returning()) satisfies UserPushSubscription[];
+
+    return c.json({ pushSubscription });
+  }
+);
 
 // GraphQL endpoint
 app.all("/graphql", async (c) => {

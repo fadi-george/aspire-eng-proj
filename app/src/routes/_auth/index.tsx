@@ -1,6 +1,6 @@
 import { useAuth } from "@/lib/auth";
+import { usePromptForNotifications } from "@/lib/notifications";
 import { createFileRoute } from "@tanstack/react-router";
-import { usePromptForNotifications } from "./-home/hooks";
 import { Search } from "./-home/search";
 import { RepositoryList } from "./-home/trackedList";
 

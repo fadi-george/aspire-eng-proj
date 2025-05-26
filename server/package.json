@@ -14,6 +14,7 @@
   "description": "",
   "dependencies": {
     "@graphql-yoga/plugin-jwt": "^3.7.5",
+    "@hono/zod-validator": "^0.5.0",
     "@octokit/rest": "^21.1.1",
     "@whatwg-node/server-plugin-cookies": "^1.0.5",
     "drizzle-orm": "^0.43.1",
@@ -22,7 +23,8 @@
     "hono": "^4.7.10",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^4.0.7",
-    "pg": "^8.16.0"
+    "pg": "^8.16.0",
+    "zod": "^3.25.28"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "5.0.6",
