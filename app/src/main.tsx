@@ -7,7 +7,10 @@ import "./styles/index.css";
 // Import the generated route tree
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useAuth } from "./lib/auth";
+import { registerServiceWorker } from "./lib/notifications";
 import { routeTree } from "./routeTree.gen";
+
+registerServiceWorker();
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({

@@ -21,12 +21,12 @@ export const usePromptForNotifications = () => {
       "askedForNotifications",
     );
     const browserSupported = "Notification" in window;
-    const userHasEnabledNotifications = Notification.permission === "granted";
 
+    // if permission is not granted, prompt for notifications
     if (
       !askedForNotifications &&
       browserSupported &&
-      !userHasEnabledNotifications
+      !Notification.permission
     ) {
       toast.info("Get notified of new releases?", {
         closeButton: true,
@@ -46,6 +46,13 @@ export const usePromptForNotifications = () => {
           sessionStorage.setItem("askedForNotifications", "true");
         },
       });
+    }
+
+    // if permission was revoked
+    if (!askedForNotifications && Notification.permission === "denied") {
+      console.log(
+        "Notifications were disabled. Reset your permissions to allow notifications.",
+      );
     }
   }, []);
 };
