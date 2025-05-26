@@ -11,8 +11,46 @@ import {
   untrackRepository,
 } from "@/lib/graphql";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
+// notifications
+export const usePromptForNotifications = () => {
+  useEffect(() => {
+    const askedForNotifications = sessionStorage.getItem(
+      "askedForNotifications",
+    );
+    const browserSupported = "Notification" in window;
+    const userHasEnabledNotifications = Notification.permission === "granted";
+
+    if (
+      !askedForNotifications &&
+      browserSupported &&
+      !userHasEnabledNotifications
+    ) {
+      toast.info("Get notified of new releases?", {
+        closeButton: true,
+        action: {
+          label: "Enable",
+          onClick: () => {
+            Notification.requestPermission().then((result) => {
+              console.log(result);
+            });
+          },
+        },
+        classNames: {
+          actionButton: "!bg-blue-500 !text-white !border-blue-500",
+        },
+        duration: Infinity,
+        onDismiss: () => {
+          sessionStorage.setItem("askedForNotifications", "true");
+        },
+      });
+    }
+  }, []);
+};
+
+// mutations and queries
 export const useUntrackRepo = ({ onSuccess }: { onSuccess: () => void }) => {
   const queryClient = useQueryClient();
   return useMutation({
