@@ -1,20 +1,21 @@
 import cron from "node-cron";
 import db from "./db";
 import { refreshRepository } from "./graphql";
+import { batchPushNotifications } from "./notifications";
 
-cron.schedule("*/15 * * * *", async () => {
+cron.schedule("15 * * * *", async () => {
   console.log("running a task every 15 minutes");
 
   const repositories = await db.query.repositories.findMany();
   for (const repository of repositories) {
     await refreshRepository(repository.repoId.toString())
-      .then(() => {
-        console.log(
-          `Cron: Refreshed repository ${repository.owner}/${repository.name}`
-        );
+      .then((repo) => {
+        console.log(`Cron: Refreshed repository ${repo.owner}/${repo.name}`);
       })
       .catch((err) => {
         console.error(err);
       });
   }
+
+  await batchPushNotifications();
 });
