@@ -17,6 +17,7 @@ import {
 import { ArrowLeft, GitCommitVertical } from "lucide-react";
 import { useEffect } from "react";
 import Markdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
@@ -176,7 +177,10 @@ function RouteComponent() {
             <>
               {release_notes ? (
                 <div className="prose markdown-body max-w-full">
-                  <Markdown remarkPlugins={[remarkGfm]}>
+                  <Markdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]}
+                  >
                     {repository?.release_notes ?? ""}
                   </Markdown>
                 </div>

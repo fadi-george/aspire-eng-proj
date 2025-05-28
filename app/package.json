@@ -33,6 +33,7 @@
     "react": "^0.0.0-experimental-99efc627-20250523",
     "react-dom": "^0.0.0-experimental-99efc627-20250523",
     "react-markdown": "^10.1.0",
+    "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
