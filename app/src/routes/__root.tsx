@@ -18,7 +18,7 @@ function Root() {
     <>
       <Toaster richColors position="bottom-right" />
       <header className="absolute right-0 left-0 m-auto flex min-h-[48px] max-w-7xl items-center justify-between px-3 pt-3 sm:px-12">
-        <img src="/aspire.png" alt="logo" className="h-6" />
+        <img src="/logo.svg" alt="logo" className="h-8" />
         {user ? <Button onClick={logout}>Logout</Button> : null}
       </header>
       <main className="m-auto h-screen max-w-7xl px-3 pt-20 pb-3 sm:px-12">
