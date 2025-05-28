@@ -159,7 +159,8 @@ export const yoga = createYoga<Context>({
           { query, limit }
         ): Promise<Query["searchRepositories"]> => {
           console.log(query);
-          // if its a url parse it
+
+          // handle urls
           let q = query;
           if (query.startsWith("https://github.com/")) {
             const url = new URL(query);
@@ -173,7 +174,7 @@ export const yoga = createYoga<Context>({
           }
 
           const response = await octokit.rest.search.repos({
-            q: `${q} in:name`,
+            q: `${q} in:name fork:true`,
             per_page: limit,
             sort: "stars",
             order: "desc",
