@@ -16,11 +16,7 @@ import type { TrackedRepository } from "@/shared/types/graphql";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { X } from "lucide-react";
-import {
-  startTransition,
-  useState,
-  unstable_ViewTransition as ViewTransition,
-} from "react";
+import { startTransition, useState } from "react";
 import Filters from "./filters";
 import { filterRepos } from "./helper";
 import { useRefreshRepositories, useUntrackRepo } from "./hooks";
@@ -112,22 +108,17 @@ export const RepositoryList = () => {
                 const { name, owner, repoId } = repository;
                 // const pendingDelete = deleteRepoInfo?.repoId === repoId;
                 return (
-                  <ViewTransition
+                  <RepositoryCard
                     key={name}
-                    // exit={pendingDelete ? "zoom-out" : undefined}
-                  >
-                    <RepositoryCard
-                      key={name}
-                      repository={repository}
-                      onRemove={() =>
-                        setDeleteRepoInfo({
-                          name: name,
-                          owner: owner,
-                          repoId: repoId,
-                        })
-                      }
-                    />
-                  </ViewTransition>
+                    repository={repository}
+                    onRemove={() =>
+                      setDeleteRepoInfo({
+                        name: name,
+                        owner: owner,
+                        repoId: repoId,
+                      })
+                    }
+                  />
                 );
               })}
               {filteredRepos.length === 0 && (
