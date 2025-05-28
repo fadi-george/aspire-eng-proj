@@ -113,7 +113,7 @@ export const usePromptForNotifications = () => {
     if (
       !askedForNotifications &&
       browserSupported &&
-      !Notification.permission
+      Notification.permission === "default"
     ) {
       toast.info("Get notified of new releases?", {
         closeButton: true,
