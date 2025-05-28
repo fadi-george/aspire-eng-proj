@@ -57,6 +57,7 @@ You could also open two terminal instances and run `bun run dev` for the `/app` 
 ![Login](./docs/screenshots/login.png)
 ![List](./docs/screenshots/list.png)
 ![Release](./docs/screenshots/release.png)
+![Notification](./docs/screenshots/notification.png)
 
 ## Features
 
