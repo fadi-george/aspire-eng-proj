@@ -68,8 +68,8 @@ export const Search = () => {
                   <CommandItem
                     disabled={isPending}
                     className="cursor-pointer"
-                    key={repository.id}
-                    value={`${owner}/${name}`}
+                    key={`${owner}/${name}`}
+                    value={`https://github.com/${owner}/${name}`}
                     onSelect={() => handleTrackRepository(repository)}
                   >
                     <div className="flex w-full items-center justify-between gap-2">
