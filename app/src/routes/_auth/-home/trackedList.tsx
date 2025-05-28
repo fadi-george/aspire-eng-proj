@@ -113,7 +113,7 @@ export const RepositoryList = () => {
                 // const pendingDelete = deleteRepoInfo?.repoId === repoId;
                 return (
                   <ViewTransition
-                    key={name}
+                    key={`${owner}/${name}`}
                     // exit={pendingDelete ? "zoom-out" : undefined}
                   >
                     <RepositoryCard
@@ -212,7 +212,7 @@ const RepositoryCard = ({
       <CardHeader className="gap-0">
         <CardTitle className="flex items-center gap-2 overflow-hidden">
           <span className="flex-1 truncate" title={name}>
-            {name}
+            {owner}/{name}
           </span>
           <MarkSeenButton
             published_at={published_at}

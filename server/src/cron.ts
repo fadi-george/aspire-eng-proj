@@ -3,7 +3,7 @@ import db from "./db";
 import { refreshRepository } from "./graphql";
 import { batchPushNotifications } from "./notifications";
 
-cron.schedule("15 * * * *", async () => {
+cron.schedule("*/15 * * * *", async () => {
   console.info("running a task every 15 minutes");
   const repositories = await db.query.repositories.findMany();
   for (const repository of repositories) {
