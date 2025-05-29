@@ -56,11 +56,7 @@ You could also open two terminal instances and run `bun run dev` for the `/app` 
 
 ## Screenshots/Videos
 
-<figure class="video_container">
-<video controls="true" allowfullscreen="true">
-<source src="./docs/screenshots//git-tracker.mp4" type="video/mp4">
-</video>
-</figure>
+[![Watch the video](https://raw.githubusercontent.com/fadi-george/git-tracker/main/docs/screenshots/list.png)](https://raw.githubusercontent.com/fadi-george/git-tracker/main/docs/screenshots/git-tracker.mp4)
 
 ![Login](./docs/screenshots/login.png)
 ![List](./docs/screenshots/list.png)
