@@ -62,9 +62,7 @@ export const RepositoryList = () => {
   // untrack a repo
   const { mutate: untrackRepo, isPending: isRemovingRepo } = useUntrackRepo({
     onSuccess: () => {
-      startTransition(() => {
-        setDeleteRepoInfo(null);
-      });
+      startTransition(() => setDeleteRepoInfo(null));
     },
   });
 

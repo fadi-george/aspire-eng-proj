@@ -158,8 +158,6 @@ export const yoga = createYoga<Context>({
           _,
           { query, limit }
         ): Promise<Query["searchRepositories"]> => {
-          console.log(query);
-
           // handle urls
           let q = query;
           if (query.startsWith("https://github.com/")) {
@@ -179,7 +177,6 @@ export const yoga = createYoga<Context>({
             sort: "stars",
             order: "desc",
           });
-          console.log(response);
 
           return response.data.items.map((repo) => ({
             id: repo.id.toString(),

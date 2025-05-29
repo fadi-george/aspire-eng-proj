@@ -1,8 +1,10 @@
 # Git Tracker
 
 A project with the goal of tracking GitHub repositories releases and marking releases as seen.
-Frontend is built using: React, Typescript, Vite, Tailwind, ShadCn, Tanstack
-Server is built using: GraphQl Yoga, Hono, Drizzle
+
+**Frontend** is built using: **React**, **Typescript**, **Vite**, **Tailwind**, **ShadCn**, **Tanstack Router**, **Tanstack Query** with a sprinkle of View-Transitions
+
+**Server** is built using: **GraphQl Yoga**, **Hono**, **Drizzle**, **Graphql Codegen**
 
 ### Prerequisites
 
@@ -52,7 +54,13 @@ Create an `.env` and set the proper fields as indicated by `.env.example`.
 
 You could also open two terminal instances and run `bun run dev` for the `/app` and `/server` folders.
 
-## Screenshots
+## Screenshots/Videos
+
+<figure class="video_container">
+<video controls="true" allowfullscreen="true">
+<source src="./docs/screenshots//git-tracker.mp4" type="video/mp4">
+</video>
+</figure>
 
 ![Login](./docs/screenshots/login.png)
 ![List](./docs/screenshots/list.png)
