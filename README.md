@@ -56,7 +56,8 @@ You could also open two terminal instances and run `bun run dev` for the `/app` 
 
 ## Screenshots/Videos
 
-[![Watch the video](https://raw.githubusercontent.com/fadi-george/git-tracker/main/docs/screenshots/list.png)](https://raw.githubusercontent.com/fadi-george/git-tracker/main/docs/screenshots/git-tracker.mp4)
+
+https://github.com/user-attachments/assets/30f95a2f-4c8b-48c0-a25c-b84f30ab9104
 
 ![Login](./docs/screenshots/login.png)
 ![List](./docs/screenshots/list.png)
